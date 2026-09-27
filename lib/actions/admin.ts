@@ -1,0 +1,202 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
+import { AppError, friendlyError, throwIfError } from "@/lib/errors";
+import { getServiceClient } from "@/lib/supabase/admin";
+import { coffeeSchema, eventSchema, sessionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
+
+function revalidateCupping() {
+  revalidatePath("/");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/events");
+  revalidatePath("/admin/sessions");
+  revalidatePath("/admin/coffees");
+  revalidatePath("/admin/qr-codes");
+  revalidatePath("/admin/analytics");
+}
+
+export async function saveEvent(id: string | null, input: unknown): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  const parsed = eventSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Please check the event details.", fieldErrors: zodFieldErrors(parsed.error) };
+  try {
+    const supabase = getServiceClient();
+    if (id) {
+      const { error } = await supabase.from("events").update(parsed.data).eq("id", id);
+      throwIfError(error, "Something went wrong while saving the event.");
+      revalidateCupping();
+      return { ok: true, data: { id } };
+    }
+    const { data, error } = await supabase.from("events").insert(parsed.data).select("id").single();
+    throwIfError(error, "Something went wrong while saving the event.");
+    if (!data?.id) throw new AppError("Something went wrong while saving the event.");
+    revalidateCupping();
+    return { ok: true, data: { id: data.id as string } };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while saving the event.") };
+  }
+}
+
+export async function setEventActive(id: string, active: boolean): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    const { error } = await getServiceClient().from("events").update({ active }).eq("id", id);
+    throwIfError(error, "Something went wrong while updating the event.");
+    revalidateCupping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while updating the event.") };
+  }
+}
+
+export async function deleteEvent(id: string): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    const supabase = getServiceClient();
+    const { count, error: countError } = await supabase.from("sessions").select("*", { count: "exact", head: true }).eq("event_id", id);
+    throwIfError(countError, "Something went wrong while deleting the event.");
+    if ((count ?? 0) > 0) return { ok: false, message: "This event still has sessions. Deactivate it, or remove the sessions first." };
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    throwIfError(error, "Something went wrong while deleting the event.");
+    revalidateCupping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while deleting the event.") };
+  }
+}
+
+export async function saveSession(id: string | null, input: unknown): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  const parsed = sessionSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Please check the session details.", fieldErrors: zodFieldErrors(parsed.error) };
+  try {
+    const supabase = getServiceClient();
+    const { data: clash, error: clashError } = await supabase.from("sessions").select("id").eq("slug", parsed.data.slug).maybeSingle();
+    throwIfError(clashError, "Something went wrong while saving the session.");
+    if (clash && clash.id !== id) {
+      return { ok: false, message: "That session link is already in use.", fieldErrors: { slug: "Choose a different slug." } };
+    }
+    if (id) {
+      const { error } = await supabase.from("sessions").update(parsed.data).eq("id", id);
+      throwIfError(error, "Something went wrong while saving the session.");
+      revalidateCupping();
+      revalidatePath(`/session/${parsed.data.slug}`);
+      return { ok: true, data: { id } };
+    }
+    const { data, error } = await supabase.from("sessions").insert(parsed.data).select("id").single();
+    throwIfError(error, "Something went wrong while saving the session.");
+    if (!data?.id) throw new AppError("Something went wrong while saving the session.");
+    revalidateCupping();
+    return { ok: true, data: { id: data.id as string } };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while saving the session.") };
+  }
+}
+
+export async function setSessionActive(id: string, active: boolean): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    const { error } = await getServiceClient().from("sessions").update({ active }).eq("id", id);
+    throwIfError(error, "Something went wrong while updating the session.");
+    revalidateCupping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while updating the session.") };
+  }
+}
+
+export async function deleteSession(id: string): Promise<ActionResult<{ deactivated?: boolean }>> {
+  await requireAdmin();
+  try {
+    const supabase = getServiceClient();
+    const { count, error: countError } = await supabase.from("participant_sessions").select("*", { count: "exact", head: true }).eq("session_id", id);
+    throwIfError(countError, "Something went wrong while deleting the session.");
+    if ((count ?? 0) > 0) {
+      const { error } = await supabase.from("sessions").update({ active: false }).eq("id", id);
+      throwIfError(error, "Something went wrong while deactivating the session.");
+      revalidateCupping();
+      return { ok: true, data: { deactivated: true } };
+    }
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    throwIfError(error, "Something went wrong while deleting the session.");
+    revalidateCupping();
+    return { ok: true, data: {} };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while deleting the session.") };
+  }
+}
+
+export async function saveCoffee(id: string | null, input: unknown): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  const parsed = coffeeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Please check the coffee details.", fieldErrors: zodFieldErrors(parsed.error) };
+  try {
+    const supabase = getServiceClient();
+    if (id) {
+      const { error } = await supabase.from("coffee_lots").update(parsed.data).eq("id", id);
+      throwIfError(error, "Something went wrong while saving the coffee.");
+      revalidateCupping();
+      return { ok: true, data: { id } };
+    }
+    const { data, error } = await supabase.from("coffee_lots").insert(parsed.data).select("id").single();
+    throwIfError(error, "Something went wrong while saving the coffee.");
+    if (!data?.id) throw new AppError("Something went wrong while saving the coffee.");
+    revalidateCupping();
+    return { ok: true, data: { id: data.id as string } };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while saving the coffee.") };
+  }
+}
+
+export async function moveCoffee(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    const supabase = getServiceClient();
+    const { data: coffee, error } = await supabase.from("coffee_lots").select("id, session_id").eq("id", id).maybeSingle();
+    throwIfError(error, "Something went wrong while reordering coffees.");
+    if (!coffee) return { ok: false, message: "That coffee could not be found." };
+    const { data: siblings, error: listError } = await supabase
+      .from("coffee_lots")
+      .select("id")
+      .eq("session_id", coffee.session_id)
+      .order("display_order", { ascending: true })
+      .order("lot_name", { ascending: true });
+    throwIfError(listError, "Something went wrong while reordering coffees.");
+    const ordered = (siblings ?? []).map((item, index) => ({ id: item.id as string, display_order: index + 1 }));
+    const current = ordered.findIndex((item) => item.id === id);
+    const target = direction === "up" ? current - 1 : current + 1;
+    if (current < 0 || target < 0 || target >= ordered.length) return { ok: true };
+    const currentOrder = ordered[current].display_order;
+    ordered[current].display_order = ordered[target].display_order;
+    ordered[target].display_order = currentOrder;
+    const updates = ordered.map((item) => supabase.from("coffee_lots").update({ display_order: item.display_order }).eq("id", item.id));
+    const results = await Promise.all(updates);
+    for (const result of results) throwIfError(result.error, "Something went wrong while reordering coffees.");
+    revalidateCupping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while reordering coffees.") };
+  }
+}
+
+export async function deleteCoffee(id: string): Promise<ActionResult<{ deactivated?: boolean }>> {
+  await requireAdmin();
+  try {
+    const supabase = getServiceClient();
+    const { count, error: countError } = await supabase.from("evaluations").select("*", { count: "exact", head: true }).eq("coffee_lot_id", id);
+    throwIfError(countError, "Something went wrong while deleting the coffee.");
+    if ((count ?? 0) > 0) {
+      const { error } = await supabase.from("coffee_lots").update({ active: false }).eq("id", id);
+      throwIfError(error, "Something went wrong while deactivating the coffee.");
+      revalidateCupping();
+      return { ok: true, data: { deactivated: true } };
+    }
+    const { error } = await supabase.from("coffee_lots").delete().eq("id", id);
+    throwIfError(error, "Something went wrong while deleting the coffee.");
+    revalidateCupping();
+    return { ok: true, data: {} };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while deleting the coffee.") };
+  }
+}

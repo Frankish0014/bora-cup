@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Cool gray canvas, white cards, one green. */
+  --color-paper: #f3f4f6;
+  --color-paper-2: #e8eaee;
+  --color-paper-3: #d7dbe2;
+  --color-foam: #ffffff;
+  --color-line: #e6e8ee;
+  --color-line-strong: #d5d8e0;
+  --color-ink: #1c1e21;
+  --color-ink-2: #2a2e33;
+  --color-ink-soft: #5e656e;
+  --color-ink-mute: #8b929c;
+  --color-coffee: #1c1e21;
+  --color-coffee-deep: #000000;
+  --color-espresso: #1c1e21;
+  --color-ember: #1c1e21;
+  --color-ember-deep: #000000;
+  --color-ember-soft: #e8eaee;
+  --color-leaf: #1f9d55;
+  --color-leaf-deep: #167a42;
+  --color-leaf-soft: #e7f6ee;
+  --color-gold: #8d8981;
+  --color-danger: #a83a2c;
+  --color-danger-bg: #faedea;
+
+  --shadow-card: 0 1px 2px rgb(28 30 33 / 0.04), 0 8px 24px -16px rgb(28 30 33 / 0.18);
+  --shadow-raised: 0 1px 2px rgb(28 30 33 / 0.06), 0 16px 32px -18px rgb(28 30 33 / 0.22);
+  --shadow-float: 0 8px 24px -12px rgb(28 30 33 / 0.18);
+  --shadow-ember: none;
+
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-fade: fade 0.25s ease-out both;
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Small quiet label above a heading or a value. */
+@utility eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-ink-mute);
+}
+
+/* White surface, large radius, soft lift. */
+@utility card {
+  border-radius: 1.35rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-foam);
+  box-shadow: var(--shadow-card);
+}
+
+@utility hairline {
+  border-color: var(--color-line);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+button,
+a,
+label,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+input[type="date"] {
+  min-height: 3rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-leaf);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: #d7f0e2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

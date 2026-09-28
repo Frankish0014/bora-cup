@@ -113,7 +113,7 @@ export function CuppingExperience({
             <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("snap-start scroll-mt-24", error && !complete && "rounded-2xl ring-2 ring-danger/40")}>
               <article className="card overflow-hidden">
                 <CoffeeInformationCard lot={coffee} position={index + 1} />
-                <div className="space-y-2.5 p-3 sm:p-4">
+                <div className="space-y-4 p-4">
                   <CommentsField
                     id={`${coffee.id}-aroma`}
                     label="Aroma"

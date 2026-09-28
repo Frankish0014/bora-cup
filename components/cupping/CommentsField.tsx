@@ -17,7 +17,7 @@ export function CommentsField({
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <label htmlFor={id} className="text-sm font-semibold text-ink">
+        <label htmlFor={id} className="text-sm font-medium text-ink">
           {label}
         </label>
         <span className="text-[11px] text-ink-mute tabular">

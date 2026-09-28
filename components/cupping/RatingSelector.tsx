@@ -25,7 +25,7 @@ export function RatingSelector({
     <fieldset>
       <legend className="sr-only">{QUESTIONS[label]}</legend>
       <div className="flex items-center justify-between gap-3">
-        <p id={`${name}-question`} className="text-sm font-semibold text-ink">
+        <p id={`${name}-question`} className="text-sm font-medium text-ink">
           {label}
         </p>
         <p aria-live="polite" className="shrink-0">

@@ -134,8 +134,8 @@ input[type="date"] {
 }
 
 .photo-fade {
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgb(0 0 0 / 0.22) 14%, rgb(0 0 0 / 0.78) 40%, black 62%);
-  mask-image: linear-gradient(to right, transparent 0%, rgb(0 0 0 / 0.22) 14%, rgb(0 0 0 / 0.78) 40%, black 62%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 36%);
+  mask-image: linear-gradient(to right, transparent 0%, black 36%);
 }
 
 @media (prefers-reduced-motion: reduce) {

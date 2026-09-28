@@ -3,6 +3,7 @@ import { Brand } from "@/components/ui/brand";
 import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { COMPETITION_STATS } from "@/lib/content/competition";
 import { getActiveSessions } from "@/lib/data/cupping";
+import { PLACEHOLDER_PHOTOS } from "@/lib/photos";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import Link from "next/link";
 
@@ -31,13 +32,18 @@ export default async function HomePage() {
       </header>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <section className="card flex flex-col justify-between bg-leaf p-6 text-white sm:p-8 lg:col-span-2">
-          <p className="text-sm font-medium text-white/80">{eventName}</p>
-          <div className="mt-8">
-            <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl">Digital cupping</h1>
-            <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Scroll through the coffees, write your notes, and save the session once. No account needed.</p>
+        <section className="card grid grid-cols-[minmax(0,1.12fr)_minmax(8.75rem,0.88fr)] items-stretch overflow-hidden bg-leaf text-white sm:grid-cols-[minmax(0,1.2fr)_minmax(13rem,0.9fr)] lg:col-span-2">
+          <div className="flex min-w-0 flex-col justify-between p-6 sm:p-8">
+            <p className="text-sm font-medium text-white/80">{eventName}</p>
+            <div className="mt-8">
+              <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl">Digital cupping</h1>
+              <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Scroll through the coffees, write your notes, and save the session once. No account needed.</p>
+            </div>
+            <p className="mt-8 text-sm text-white/70">At the table, scan the QR code for your session.</p>
           </div>
-          <p className="mt-8 text-sm text-white/70">At the table, scan the QR code for your session.</p>
+          <div className="relative min-h-full">
+            <img src="/photos/branch-ripe.jpg" alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-center" />
+          </div>
         </section>
 
         <section className="lg:col-span-3" aria-labelledby="sessions">
@@ -48,20 +54,35 @@ export default async function HomePage() {
             {sessions.length > 0 ? <span className="text-xs text-ink-mute tabular">{sessions.length}</span> : null}
           </div>
           {sessions.length > 0 ? (
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {sessions.map((session) => (
-                <li key={session.id} className="card flex items-center justify-between gap-3 p-4">
-                  <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-semibold text-ink">{session.name}</span>
-                    <span className="mt-0.5 block text-sm text-ink-soft">
-                      {session.category} · {session.coffeeCount} {session.coffeeCount === 1 ? "coffee" : "coffees"}
+            <ul className="grid grid-cols-1 gap-3">
+              {sessions.map((session, index) => {
+                const drying = /washed/i.test(session.slug);
+                const beds = /special/i.test(session.slug);
+                const photo = drying ? "/photos/drying.jpg" : beds ? "/photos/beds.jpg" : PLACEHOLDER_PHOTOS[(index + 1) % PLACEHOLDER_PHOTOS.length];
+                const focus = drying ? "object-[22%_42%]" : beds ? "object-[center_62%]" : "object-center";
+                return (
+                <li key={session.id} className="card grid grid-cols-[minmax(0,1fr)_7.25rem] items-stretch overflow-hidden sm:grid-cols-[minmax(0,1fr)_9rem]">
+                  <span className="flex min-w-0 items-center justify-between gap-3 p-4">
+                    <span className="min-w-0">
+                      <span className="block truncate text-[15px] font-semibold text-ink">{session.name}</span>
+                      <span className="mt-0.5 block text-sm text-ink-soft">
+                        {session.category} · {session.coffeeCount} {session.coffeeCount === 1 ? "coffee" : "coffees"}
+                      </span>
                     </span>
+                    <Link href={`/session/${session.slug}`} className={buttonClasses("primary", `${buttonSm} shrink-0`)}>
+                      Open
+                    </Link>
                   </span>
-                  <Link href={`/session/${session.slug}`} className={buttonClasses("primary", `${buttonSm} shrink-0`)}>
-                    Open
-                  </Link>
+                  <span className="relative min-h-full">
+                    <img
+                      src={photo}
+                      alt=""
+                      className={`photo-fade absolute inset-0 h-full w-full object-cover ${focus}`}
+                    />
+                  </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           ) : (
             <div className="card px-6 py-10 text-center">

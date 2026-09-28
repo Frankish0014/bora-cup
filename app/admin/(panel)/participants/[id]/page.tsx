@@ -45,7 +45,7 @@ export default async function ParticipantDetailPage({ params }: { params: Promis
         <SectionTitle>Evaluations</SectionTitle>
         <ol className="space-y-3">
           {detail.evaluations.map((evaluation) => {
-            const notes = formatNotes(evaluation.comments);
+            const notes = formatNotes({ aroma: evaluation.aroma_note, flavor: evaluation.flavor_note, overall: evaluation.overall_note });
             return (
               <li key={evaluation.id} className="card p-5">
                 <p className="text-xs font-medium text-ink-mute">{evaluation.sessionName}</p>

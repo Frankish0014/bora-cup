@@ -1,4 +1,4 @@
-import { emptyDraft, parseNotes, type Draft } from "@/lib/cupping";
+import { emptyDraft, type Draft } from "@/lib/cupping";
 import { isRatingScore } from "@/lib/ratings";
 
 function key(participantSessionId: string) {
@@ -46,21 +46,20 @@ export function writeDrafts(participantSessionId: string, drafts: Record<string,
 
 export function draftsFromSaved(
   coffeeIds: string[],
-  evaluations: Array<{ coffee_lot_id: string; overall_score: number; comments: string | null }>,
+  evaluations: Array<{ coffee_lot_id: string; overall_score: number; aroma_note: string | null; flavor_note: string | null; overall_note: string | null }>,
 ) {
   const saved = new Map(evaluations.map((evaluation) => [evaluation.coffee_lot_id, evaluation]));
   return Object.fromEntries(
     coffeeIds.map((id) => {
       const evaluation = saved.get(id);
       if (!evaluation) return [id, emptyDraft()];
-      const notes = parseNotes(evaluation.comments);
       return [
         id,
         {
           score: evaluation.overall_score,
-          aroma: notes.aroma,
-          flavor: notes.flavor,
-          overall: notes.overall,
+          aroma: evaluation.aroma_note ?? "",
+          flavor: evaluation.flavor_note ?? "",
+          overall: evaluation.overall_note ?? "",
         } satisfies Draft,
       ];
     }),

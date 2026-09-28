@@ -18,7 +18,9 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 type SavedEvaluation = {
   coffee_lot_id: string;
   overall_score: number;
-  comments: string | null;
+  aroma_note: string | null;
+  flavor_note: string | null;
+  overall_note: string | null;
 };
 
 export function CuppingExperience({

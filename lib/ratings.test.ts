@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { average, distribution, summarizeCoffees } from "@/lib/analytics";
 import { visibleCoffeeFields } from "@/lib/coffee";
 import { CSV_COLUMNS, toCsv } from "@/lib/csv";
-import { INCOMPLETE_RATINGS_MESSAGE, formatNotes, isDraftComplete, nextIndex, parseNotes, previousIndex, serializeNotes } from "@/lib/cupping";
+import { INCOMPLETE_RATINGS_MESSAGE, formatNotes, isDraftComplete, nextIndex, previousIndex } from "@/lib/cupping";
 import { buildDemoCoffees, buildDemoEvaluations, demoScore } from "@/database/demo-data";
 import { parseEvaluationFilters, sanitizeSearch } from "@/lib/filters";
 import { RATING_OPTIONS, formatAverage, ratingLabel, scoreOutOf100 } from "@/lib/ratings";
@@ -50,13 +50,9 @@ describe("cupping navigation", () => {
     expect(isDraftComplete({ score: 5, aroma: "floral", flavor: "cocoa", overall: "sweet" })).toBe(true);
   });
 
-  it("stores aroma, flavor, and overall as comments", () => {
-    const stored = serializeNotes({ aroma: "Jasmine", flavor: "Cocoa", overall: "Sweet and long" });
-    expect(parseNotes(stored)).toEqual({ aroma: "Jasmine", flavor: "Cocoa", overall: "Sweet and long" });
-    expect(formatNotes(stored)).toBe("Aroma: Jasmine\nFlavor: Cocoa\nOverall: Sweet and long");
-    expect(parseNotes("Very clean and sweet.").overall).toBe("Very clean and sweet.");
-    expect(formatNotes("Very clean and sweet.")).toBe("Very clean and sweet.");
-    expect(serializeNotes({ aroma: "  ", flavor: "", overall: "" })).toBeNull();
+  it("formats aroma, flavor, and overall from their own fields", () => {
+    expect(formatNotes({ aroma: "Jasmine", flavor: "Cocoa", overall: "Sweet and long" })).toBe("Aroma: Jasmine\nFlavor: Cocoa\nOverall: Sweet and long");
+    expect(formatNotes({ aroma: "  ", flavor: "", overall: "" })).toBeNull();
   });
 
   it("moves between coffees without leaving the range", () => {
@@ -109,12 +105,12 @@ describe("analytics and csv", () => {
     expect(average([5, 4, 4])).toBe(4.33);
     expect(distribution([1, 5, 5])[5]).toBe(2);
     const [summary] = summarizeCoffees([
-      { coffeeId: "c1", coffeeName: "Fully Washed #1", sessionName: "Fully Washed", displayOrder: 1, score: 4, country: "Rwanda", comment: "Very clean and sweet." },
-      { coffeeId: "c1", coffeeName: "Fully Washed #1", sessionName: "Fully Washed", displayOrder: 1, score: 2, country: "Kenya", comment: null },
+      { coffeeId: "c1", coffeeName: "Fully Washed #1", sessionName: "Fully Washed", displayOrder: 1, score: 4, country: "Rwanda", aroma: "Jasmine", flavor: "Cocoa", overall: "Very clean and sweet." },
+      { coffeeId: "c1", coffeeName: "Fully Washed #1", sessionName: "Fully Washed", displayOrder: 1, score: 2, country: "Kenya", aroma: null, flavor: null, overall: null },
     ]);
     expect(summary.evaluations).toBe(2);
     expect(summary.score).toBe(3);
-    expect(summary.comments).toEqual(["Very clean and sweet."]);
+    expect(summary.comments).toEqual(["Aroma: Jasmine\nFlavor: Cocoa\nOverall: Very clean and sweet."]);
   });
 
   it("exports the required columns and neutralizes spreadsheet formulas", () => {

@@ -12,6 +12,7 @@ export type CoffeeFields = {
   producer?: string | null;
   cooperative?: string | null;
   description?: string | null;
+  photo_url?: string | null;
 };
 
 const FIELD_DEFS = [

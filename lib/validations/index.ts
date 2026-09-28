@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isCountry } from "@/lib/countries";
-import { COMMENT_MAX_LENGTH, serializeNotes } from "@/lib/cupping";
+import { COMMENT_MAX_LENGTH } from "@/lib/cupping";
 import { isSlug } from "@/lib/utils";
 
 const optionalText = (max: number) =>
@@ -46,49 +46,27 @@ const note = z
   .min(1, "This note is required.")
   .max(COMMENT_MAX_LENGTH, "Comments must be 300 characters or fewer.");
 
-const cuppingNotesSchema = z
-  .object({
-    coffeeLotId: z.string().uuid(),
-    score: z.number().int().min(1).max(5),
-    aroma: note,
-    flavor: note,
-    overall: note,
-  })
-  .superRefine((value, ctx) => {
-    const stored = serializeNotes(value);
-    if (stored && stored.length > 1000) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Those comments are too long together. Shorten one and try again.",
-        path: ["overall"],
-      });
-    }
-  });
+const cuppingNotesSchema = z.object({
+  coffeeLotId: z.string().uuid(),
+  score: z.number().int().min(1).max(5),
+  aroma: note,
+  flavor: note,
+  overall: note,
+});
 
 export const sessionSubmissionSchema = z.object({
   participantSessionId: z.string().uuid(),
   evaluations: z.array(cuppingNotesSchema).min(1),
 });
 
-export const evaluationSchema = z
-  .object({
-    participantSessionId: z.string().uuid(),
-    coffeeLotId: z.string().uuid(),
-    score: z.number().int().min(1).max(5),
-    aroma: note,
-    flavor: note,
-    overall: note,
-  })
-  .superRefine((value, ctx) => {
-    const stored = serializeNotes(value);
-    if (stored && stored.length > 1000) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Those comments are too long together. Shorten one and try again.",
-        path: ["overall"],
-      });
-    }
-  });
+export const evaluationSchema = z.object({
+  participantSessionId: z.string().uuid(),
+  coffeeLotId: z.string().uuid(),
+  score: z.number().int().min(1).max(5),
+  aroma: note,
+  flavor: note,
+  overall: note,
+});
 
 export const eventSchema = z
   .object({

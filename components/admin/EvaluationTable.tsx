@@ -42,7 +42,7 @@ export function EvaluationTable({ rows }: { rows: EvaluationView[] }) {
                 </TD>
                 <TD className="align-top whitespace-nowrap">{ratingLabel(row.overall_score)}</TD>
                 <TD className="max-w-sm align-top text-ink-soft">
-                  <Notes text={formatNotes(row.comments)} />
+                  <Notes text={formatNotes({ aroma: row.aroma_note, flavor: row.flavor_note, overall: row.overall_note })} />
                 </TD>
                 <TD className="align-top text-xs whitespace-nowrap text-ink-mute tabular">{formatDateTime(row.updated_at)}</TD>
               </TR>
@@ -64,7 +64,7 @@ export function EvaluationTable({ rows }: { rows: EvaluationView[] }) {
               {row.coffee.lot_name} · {row.session.name}
             </p>
             <p className="mt-3 text-sm font-medium text-ink">{ratingLabel(row.overall_score)}</p>
-            <Notes text={formatNotes(row.comments)} className="mt-3" />
+            <Notes text={formatNotes({ aroma: row.aroma_note, flavor: row.flavor_note, overall: row.overall_note })} className="mt-3" />
           </li>
         ))}
       </ul>

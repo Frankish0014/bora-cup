@@ -129,13 +129,13 @@ where participant_session_id in (${runs.map((run) => sqlText(run.id)).join(", ")
 
 insert into public.evaluations (
   participant_session_id, participant_id, session_id, coffee_lot_id,
-  aroma_score, flavor_score, overall_score, comments
+  aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note
 )
 values
 ${evaluations
   .map(
     (evaluation) =>
-      `  (${sqlText(evaluation.participant_session_id)}, ${sqlText(evaluation.participant_id)}, ${sqlText(evaluation.session_id)}, ${sqlText(evaluation.coffee_lot_id)}, ${evaluation.aroma_score}, ${evaluation.flavor_score}, ${evaluation.overall_score}, ${sqlText(evaluation.comments)})`,
+      `  (${sqlText(evaluation.participant_session_id)}, ${sqlText(evaluation.participant_id)}, ${sqlText(evaluation.session_id)}, ${sqlText(evaluation.coffee_lot_id)}, ${evaluation.aroma_score}, ${evaluation.flavor_score}, ${evaluation.overall_score}, ${sqlText(evaluation.aroma_note)}, ${sqlText(evaluation.flavor_note)}, ${sqlText(evaluation.overall_note)})`,
   )
   .join(",\n")};
 

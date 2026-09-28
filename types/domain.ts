@@ -37,6 +37,7 @@ export type CoffeeLot = {
   producer: string | null;
   cooperative: string | null;
   description: string | null;
+  photo_url: string | null;
   display_order: number;
   active: boolean;
   created_at: string;
@@ -72,6 +73,9 @@ export type EvaluationRecord = {
   aroma_score: number;
   flavor_score: number;
   overall_score: number;
+  aroma_note: string | null;
+  flavor_note: string | null;
+  overall_note: string | null;
   comments: string | null;
   created_at: string;
   updated_at: string;

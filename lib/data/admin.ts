@@ -1,7 +1,6 @@
 import "server-only";
 import { summarizeCoffees, type ScoreRow } from "@/lib/analytics";
 import type { CsvRow } from "@/lib/csv";
-import { parseNotes } from "@/lib/cupping";
 import { throwIfError } from "@/lib/errors";
 import type { EvaluationFilters } from "@/lib/filters";
 import { getServiceClient } from "@/lib/supabase/admin";
@@ -15,7 +14,9 @@ export type EvaluationView = {
   aroma_score: number;
   flavor_score: number;
   overall_score: number;
-  comments: string | null;
+  aroma_note: string | null;
+  flavor_note: string | null;
+  overall_note: string | null;
   updated_at: string;
   participant: {
     id: string;
@@ -43,7 +44,7 @@ export type EvaluationView = {
 };
 
 const EVALUATION_SELECT = `
-  id, aroma_score, flavor_score, overall_score, comments, updated_at,
+  id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at,
   participants!inner(id, name, email, country, organization, role),
   coffee_lots!inner(id, lot_name, lot_number, cupping_code, washing_station, district, variety, process, altitude, harvest, display_order),
   sessions!inner(id, name, event_id, events!inner(id, name))
@@ -85,7 +86,9 @@ function mapEvaluation(row: Record<string, unknown>): EvaluationView {
     aroma_score: Number(row.aroma_score),
     flavor_score: Number(row.flavor_score),
     overall_score: Number(row.overall_score),
-    comments: (row.comments as string | null) ?? null,
+    aroma_note: (row.aroma_note as string | null) ?? null,
+    flavor_note: (row.flavor_note as string | null) ?? null,
+    overall_note: (row.overall_note as string | null) ?? null,
     updated_at: String(row.updated_at),
     participant,
     coffee,
@@ -95,7 +98,6 @@ function mapEvaluation(row: Record<string, unknown>): EvaluationView {
 }
 
 export function evaluationToCsvRow(view: EvaluationView): CsvRow {
-  const notes = parseNotes(view.comments);
   return {
     "Participant Name": view.participant.name,
     Email: view.participant.email,
@@ -114,9 +116,9 @@ export function evaluationToCsvRow(view: EvaluationView): CsvRow {
     Altitude: view.coffee.altitude,
     Harvest: view.coffee.harvest,
     Score: view.overall_score,
-    Aroma: notes.aroma || null,
-    Flavor: notes.flavor || null,
-    Overall: notes.overall || null,
+    Aroma: view.aroma_note,
+    Flavor: view.flavor_note,
+    Overall: view.overall_note,
     "Submitted At": view.updated_at,
   };
 }
@@ -160,7 +162,9 @@ export async function getScoreRows(filters: EvaluationFilters) {
     displayOrder: view.coffee.display_order,
     score: view.overall_score,
     country: view.participant.country,
-    comment: view.comments,
+    aroma: view.aroma_note,
+    flavor: view.flavor_note,
+    overall: view.overall_note,
   }));
   return summarizeCoffees(rows);
 }
@@ -171,7 +175,9 @@ export type DashboardEvaluation = {
   aroma_score: number;
   flavor_score: number;
   overall_score: number;
-  comments: string | null;
+  aroma_note: string | null;
+  flavor_note: string | null;
+  overall_note: string | null;
   updated_at: string;
 };
 
@@ -200,7 +206,7 @@ export async function getDashboardStats() {
     const [{ data: evaluationPage, error: evaluationError }, { data: countryPage, error: countryError }] = await Promise.all([
       supabase
         .from("evaluations")
-        .select("session_id, coffee_lot_id, aroma_score, flavor_score, overall_score, comments, updated_at")
+        .select("session_id, coffee_lot_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at")
         .order("updated_at", { ascending: true })
         .range(from, from + 999),
       page === 0 ? supabase.from("participants").select("country").range(0, 999) : Promise.resolve({ data: [], error: null }),
@@ -321,7 +327,7 @@ export async function getParticipantDetail(id: string) {
   throwIfError(runError, "Something went wrong while loading this participant.");
   const { data: evaluations, error: evaluationError } = await supabase
     .from("evaluations")
-    .select("id, aroma_score, flavor_score, overall_score, comments, updated_at, coffee_lots(lot_name), sessions(name)")
+    .select("id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at, coffee_lots(lot_name), sessions(name)")
     .eq("participant_id", id)
     .order("updated_at", { ascending: false });
   throwIfError(evaluationError, "Something went wrong while loading this participant.");
@@ -339,7 +345,9 @@ export async function getParticipantDetail(id: string) {
       aroma_score: evaluation.aroma_score as number,
       flavor_score: evaluation.flavor_score as number,
       overall_score: evaluation.overall_score as number,
-      comments: evaluation.comments as string | null,
+      aroma_note: evaluation.aroma_note as string | null,
+      flavor_note: evaluation.flavor_note as string | null,
+      overall_note: evaluation.overall_note as string | null,
       updated_at: evaluation.updated_at as string,
       coffeeName: asOne(evaluation.coffee_lots as { lot_name: string } | { lot_name: string }[])?.lot_name ?? "Coffee",
       sessionName: asOne(evaluation.sessions as { name: string } | { name: string }[])?.name ?? "Session",

@@ -281,7 +281,9 @@ export function buildDemoEvaluations() {
           aroma_score: demoScore(`${seed}:aroma`),
           flavor_score: demoScore(`${seed}:flavor`),
           overall_score: demoScore(`${seed}:overall`),
-          comments: demoComment(`${seed}:comment`),
+          aroma_note: demoComment(`${seed}:aroma`),
+          flavor_note: demoComment(`${seed}:flavor`),
+          overall_note: demoComment(`${seed}:overall`),
         };
       });
   });

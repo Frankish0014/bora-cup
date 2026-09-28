@@ -101,7 +101,7 @@ export async function getEvaluationsForRun(participantSessionId: string) {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("evaluations")
-    .select("coffee_lot_id, aroma_score, flavor_score, overall_score, comments")
+    .select("coffee_lot_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note")
     .eq("participant_session_id", participantSessionId);
   throwIfError(error, "Something went wrong while loading your evaluations.");
   return (data ?? []) as Array<{
@@ -109,6 +109,8 @@ export async function getEvaluationsForRun(participantSessionId: string) {
     aroma_score: number;
     flavor_score: number;
     overall_score: number;
-    comments: string | null;
+    aroma_note: string | null;
+    flavor_note: string | null;
+    overall_note: string | null;
   }>;
 }

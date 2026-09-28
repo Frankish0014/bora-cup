@@ -1,12 +1,32 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { INCOMPLETE_RATINGS_MESSAGE, INCOMPLETE_SUBMISSION_MESSAGE, SAVE_FAILED_MESSAGE, parseNotes, serializeNotes } from "@/lib/cupping";
+import { INCOMPLETE_RATINGS_MESSAGE, INCOMPLETE_SUBMISSION_MESSAGE, SAVE_FAILED_MESSAGE } from "@/lib/cupping";
 import { getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
 import { AppError, friendlyError, throwIfError } from "@/lib/errors";
 import { addResumeToken, parseResumeTokens, RESUME_COOKIE, resumeCookieOptions } from "@/lib/resume";
 import { getServiceClient } from "@/lib/supabase/admin";
 import { evaluationSchema, participantSchema, sessionSubmissionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
+
+function noteColumns(evaluation: { score: number; aroma: string; flavor: string; overall: string }) {
+  return {
+    aroma_score: evaluation.score,
+    flavor_score: evaluation.score,
+    overall_score: evaluation.score,
+    aroma_note: evaluation.aroma.trim(),
+    flavor_note: evaluation.flavor.trim(),
+    overall_note: evaluation.overall.trim(),
+    comments: null,
+  };
+}
+
+function throwSaveError(error: { message: string } | null) {
+  if (!error) return;
+  if (/aroma_note|flavor_note|overall_note|schema cache/i.test(error.message)) {
+    throw new AppError("Run the cupping notes update in the Supabase SQL editor, then save again.");
+  }
+  throwIfError(error, SAVE_FAILED_MESSAGE);
+}
 
 async function authorizedRun(participantSessionId: string) {
   const cookieStore = await cookies();
@@ -143,21 +163,17 @@ export async function saveEvaluation(input: unknown): Promise<ActionResult> {
       throw new AppError("That coffee is no longer part of this session.");
     }
 
-    const comments = serializeNotes(parsed.data);
     const { error } = await supabase.from("evaluations").upsert(
       {
         participant_session_id: run.id,
         participant_id: run.participant_id,
         session_id: run.session_id,
         coffee_lot_id: coffee.id,
-        aroma_score: parsed.data.score,
-        flavor_score: parsed.data.score,
-        overall_score: parsed.data.score,
-        comments,
+        ...noteColumns(parsed.data),
       },
       { onConflict: "participant_session_id,coffee_lot_id" },
     );
-    throwIfError(error, SAVE_FAILED_MESSAGE);
+    throwSaveError(error);
     return { ok: true };
   } catch (error) {
     return { ok: false, message: friendlyError(error, SAVE_FAILED_MESSAGE) };
@@ -194,14 +210,11 @@ export async function saveAndSubmitCupping(input: unknown): Promise<ActionResult
         participant_id: run.participant_id,
         session_id: run.session_id,
         coffee_lot_id: evaluation.coffeeLotId,
-        aroma_score: evaluation.score,
-        flavor_score: evaluation.score,
-        overall_score: evaluation.score,
-        comments: serializeNotes(evaluation),
+        ...noteColumns(evaluation),
       })),
       { onConflict: "participant_session_id,coffee_lot_id" },
     );
-    throwIfError(error, SAVE_FAILED_MESSAGE);
+    throwSaveError(error);
 
     const { error: completeError } = await supabase
       .from("participant_sessions")
@@ -223,7 +236,7 @@ export async function submitCupping(participantSessionId: string): Promise<Actio
     const supabase = getServiceClient();
     const [{ data: coffees, error: coffeeError }, { data: evaluations, error: evaluationError }] = await Promise.all([
       supabase.from("coffee_lots").select("id").eq("session_id", run.session_id).eq("active", true),
-      supabase.from("evaluations").select("coffee_lot_id, overall_score, comments").eq("participant_session_id", run.id),
+      supabase.from("evaluations").select("coffee_lot_id, overall_score, aroma_note, flavor_note, overall_note").eq("participant_session_id", run.id),
     ]);
     throwIfError(coffeeError, "Something went wrong while submitting your cupping. Please try again.");
     throwIfError(evaluationError, "Something went wrong while submitting your cupping. Please try again.");
@@ -231,8 +244,10 @@ export async function submitCupping(participantSessionId: string): Promise<Actio
     const byCoffee = new Map((evaluations ?? []).map((evaluation) => [evaluation.coffee_lot_id as string, evaluation]));
     const missing = (coffees ?? []).some((coffee) => {
       const evaluation = byCoffee.get(coffee.id as string);
-      const notes = parseNotes(evaluation?.comments as string | null | undefined);
-      return !evaluation || evaluation.overall_score == null || !notes.aroma.trim() || !notes.flavor.trim() || !notes.overall.trim();
+      const aroma = (evaluation?.aroma_note as string | null | undefined)?.trim();
+      const flavor = (evaluation?.flavor_note as string | null | undefined)?.trim();
+      const overall = (evaluation?.overall_note as string | null | undefined)?.trim();
+      return !evaluation || evaluation.overall_score == null || !aroma || !flavor || !overall;
     });
     if (missing || (coffees ?? []).length === 0) {
       throw new AppError(INCOMPLETE_SUBMISSION_MESSAGE);

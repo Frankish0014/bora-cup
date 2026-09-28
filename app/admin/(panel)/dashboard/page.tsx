@@ -2,7 +2,6 @@ import { ChartCard, ChartEmpty, DonutChart, HorizontalBars, Kpi, RATING_COLORS, 
 import { PageHeader, SectionAction, SectionTitle } from "@/components/admin/PageHeader";
 import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { average, countBy, distribution } from "@/lib/analytics";
-import { parseNotes } from "@/lib/cupping";
 import { getDashboardStats, type DashboardEvaluation } from "@/lib/data/admin";
 import { RATING_OPTIONS, formatAverage, scoreOutOf100 } from "@/lib/ratings";
 import { formatDateTime } from "@/lib/utils";
@@ -16,11 +15,10 @@ export default async function DashboardPage() {
 
   const overallAverage = average(evaluations.map((row) => row.overall_score));
   const overallDistribution = distribution(evaluations.map((row) => row.overall_score));
-  const notes = evaluations.map((row) => parseNotes(row.comments));
-  const aromaNotes = notes.filter((note) => note.aroma.trim()).length;
-  const flavorNotes = notes.filter((note) => note.flavor.trim()).length;
-  const overallNotes = notes.filter((note) => note.overall.trim()).length;
-  const withNotes = notes.filter((note) => note.aroma.trim() || note.flavor.trim() || note.overall.trim()).length;
+  const aromaNotes = evaluations.filter((row) => row.aroma_note?.trim()).length;
+  const flavorNotes = evaluations.filter((row) => row.flavor_note?.trim()).length;
+  const overallNotes = evaluations.filter((row) => row.overall_note?.trim()).length;
+  const withNotes = evaluations.filter((row) => row.aroma_note?.trim() || row.flavor_note?.trim() || row.overall_note?.trim()).length;
   const cuppedCoffees = new Set(evaluations.map((row) => row.coffee_lot_id)).size;
   const countries = countBy(stats.countries);
   const sessionRuns = stats.completedSessions + stats.inProgressSessions;

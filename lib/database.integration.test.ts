@@ -56,7 +56,9 @@ describe.skipIf(!live)("database", () => {
       aroma_score: 4,
       flavor_score: 5,
       overall_score: 4,
-      comments: "Very clean and sweet.",
+      aroma_note: "Jasmine",
+      flavor_note: "Cocoa",
+      overall_note: "Very clean and sweet.",
     };
     const { error: insertError } = await admin.from("evaluations").insert(evaluation);
     expect(insertError).toBeNull();

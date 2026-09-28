@@ -5,12 +5,6 @@ export const INCOMPLETE_SUBMISSION_MESSAGE = "Please complete aroma, flavor, ove
 export const SAVE_FAILED_MESSAGE = "Something went wrong while saving your evaluation. Please check your connection and try again.";
 export const COMMENT_MAX_LENGTH = 300;
 
-export type CuppingNotes = {
-  aroma: string;
-  flavor: string;
-  overall: string;
-};
-
 export type Draft = {
   score: number | null;
   aroma: string;
@@ -30,53 +24,11 @@ export function isDraftComplete(draft: Draft | undefined): draft is Draft & { sc
   return Boolean(draft && hasNote(draft.aroma) && hasNote(draft.flavor) && hasNote(draft.overall) && isRatingScore(draft.score));
 }
 
-export function parseNotes(raw: string | null | undefined): CuppingNotes {
-  const empty = { aroma: "", flavor: "", overall: "" };
-  if (!raw?.trim()) return empty;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { ...empty, overall: raw };
-    const record = parsed as Record<string, unknown>;
-    if (typeof record.aroma !== "string" && typeof record.flavor !== "string" && typeof record.overall !== "string") {
-      return { ...empty, overall: raw };
-    }
-    return {
-      aroma: typeof record.aroma === "string" ? record.aroma : "",
-      flavor: typeof record.flavor === "string" ? record.flavor : "",
-      overall: typeof record.overall === "string" ? record.overall : "",
-    };
-  } catch {
-    return { ...empty, overall: raw };
-  }
-}
-
-export function notesAreStructured(raw: string | null | undefined) {
-  if (!raw?.trim()) return false;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return false;
-    const record = parsed as Record<string, unknown>;
-    return typeof record.aroma === "string" || typeof record.flavor === "string" || typeof record.overall === "string";
-  } catch {
-    return false;
-  }
-}
-
-export function serializeNotes(notes: CuppingNotes) {
-  const aroma = notes.aroma.trim();
-  const flavor = notes.flavor.trim();
-  const overall = notes.overall.trim();
-  if (!aroma && !flavor && !overall) return null;
-  return JSON.stringify({ aroma, flavor, overall });
-}
-
-export function formatNotes(raw: string | null | undefined) {
-  const notes = parseNotes(raw);
-  if (!notesAreStructured(raw)) return notes.overall.trim() || null;
+export function formatNotes(notes: { aroma?: string | null; flavor?: string | null; overall?: string | null } | null | undefined) {
   const lines = [
-    notes.aroma.trim() ? `Aroma: ${notes.aroma.trim()}` : "",
-    notes.flavor.trim() ? `Flavor: ${notes.flavor.trim()}` : "",
-    notes.overall.trim() ? `Overall: ${notes.overall.trim()}` : "",
+    notes?.aroma?.trim() ? `Aroma: ${notes.aroma.trim()}` : "",
+    notes?.flavor?.trim() ? `Flavor: ${notes.flavor.trim()}` : "",
+    notes?.overall?.trim() ? `Overall: ${notes.overall.trim()}` : "",
   ].filter(Boolean);
   return lines.length > 0 ? lines.join("\n") : null;
 }

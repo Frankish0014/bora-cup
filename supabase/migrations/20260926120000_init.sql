@@ -104,6 +104,9 @@ create table public.evaluations (
   aroma_score integer not null,
   flavor_score integer not null,
   overall_score integer not null,
+  aroma_note text,
+  flavor_note text,
+  overall_note text,
   comments text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -111,6 +114,9 @@ create table public.evaluations (
   constraint evaluations_aroma_check check (aroma_score between 1 and 5),
   constraint evaluations_flavor_check check (flavor_score between 1 and 5),
   constraint evaluations_overall_check check (overall_score between 1 and 5),
+  constraint evaluations_aroma_note_length check (aroma_note is null or char_length(aroma_note) <= 300),
+  constraint evaluations_flavor_note_length check (flavor_note is null or char_length(flavor_note) <= 300),
+  constraint evaluations_overall_note_length check (overall_note is null or char_length(overall_note) <= 300),
   constraint evaluations_comments_length check (comments is null or char_length(comments) <= 1000)
 );
 

@@ -11,7 +11,7 @@ async function loadCup(slug: string) {
   try {
     const session = await getSessionBySlug(slug);
     if (!session) return { status: "missing" as const };
-    if (!session.active || session.event?.active === false) return { status: "inactive" as const };
+    if (!session.active) return { status: "inactive" as const };
     const coffees = await getCoffeesForSession(session.id, true);
     if (coffees.length === 0) return { status: "empty" as const };
     const run = await findRunForSlug(slug);

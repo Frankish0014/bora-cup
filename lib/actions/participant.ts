@@ -41,7 +41,7 @@ export async function startCupping(slug: string, input: unknown): Promise<Action
   try {
     const session = await getSessionBySlug(slug);
     if (!session) throw new AppError("We couldn't find that cupping session. Check the QR code and try again.");
-    if (!session.active || session.event?.active === false) {
+    if (!session.active) {
       throw new AppError("This cupping session is not open right now.");
     }
 

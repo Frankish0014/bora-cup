@@ -1,3 +1,4 @@
+import { ActiveToggle } from "@/components/admin/RecordActions";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClasses, buttonSm, buttonXs } from "@/components/ui/button";
@@ -13,7 +14,7 @@ export default async function SessionsPage() {
     <div>
       <PageHeader
         title="Sessions"
-        description="Each session has its own QR code and its own coffee sequence."
+        description="Active sessions are open to participants. Deactivate a session to close its link."
         action={
           <Link className={buttonClasses("primary", buttonSm)} href="/admin/sessions/new">
             Add session
@@ -29,7 +30,7 @@ export default async function SessionsPage() {
               <TH>Event</TH>
               <TH>Link</TH>
               <TH className="w-32">Status</TH>
-              <TH className="w-24 text-right">Actions</TH>
+              <TH className="w-44 text-right">Actions</TH>
             </tr>
           </thead>
           <tbody>
@@ -49,9 +50,12 @@ export default async function SessionsPage() {
                   <StatusBadge active={session.active} />
                 </TD>
                 <TD className="text-right">
-                  <Link className={buttonClasses("secondary", buttonXs)} href={`/admin/sessions/${session.id}`}>
-                    Edit
-                  </Link>
+                  <span className="inline-flex items-center justify-end gap-2">
+                    <ActiveToggle kind="session" id={session.id} active={session.active} />
+                    <Link className={buttonClasses("secondary", buttonXs)} href={`/admin/sessions/${session.id}`}>
+                      Edit
+                    </Link>
+                  </span>
                 </TD>
               </TR>
             ))}

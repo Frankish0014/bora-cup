@@ -35,7 +35,6 @@ export async function getActiveSessions() {
     .from("sessions")
     .select("id, name, slug, category, description, active, event_id, created_at, updated_at, events!inner(name, active)")
     .eq("active", true)
-    .eq("events.active", true)
     .order("name");
   throwIfError(error, "Something went wrong while loading sessions.");
   const sessions = data ?? [];

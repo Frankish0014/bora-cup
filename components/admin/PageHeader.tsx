@@ -16,12 +16,12 @@ export function PageHeader({
   return (
     <div className="mb-8">
       {eyebrow ? <div className="mb-4">{eyebrow}</div> : null}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 lg:flex-1">
           <h1 className="font-display text-3xl leading-[1.1] text-ink sm:text-4xl">{title}</h1>
           {description ? <p className="mt-2 max-w-2xl text-[15px] leading-6 text-ink-soft">{description}</p> : null}
         </div>
-        {action ? <div className="flex flex-wrap items-center gap-2 pt-1">{action}</div> : null}
+        {action ? <div className="flex flex-wrap items-center gap-2 lg:max-w-md lg:justify-end lg:pt-1">{action}</div> : null}
       </div>
     </div>
   );

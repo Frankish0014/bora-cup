@@ -55,7 +55,7 @@ export function AdminNav({ email }: { email: string | null }) {
             <SignOutButton />
           </div>
         </div>
-        <nav className="flex min-w-0 gap-1 overflow-x-auto rounded-full bg-paper p-1 [scrollbar-width:none] lg:flex-1" aria-label="Admin">
+        <nav className="flex min-w-0 flex-wrap gap-1 rounded-2xl bg-paper p-1 lg:flex-1 lg:flex-nowrap lg:overflow-x-auto lg:rounded-full lg:[scrollbar-width:none]" aria-label="Admin">
           {ALL_LINKS.map((link) => {
             const active = isActive(pathname, link.href);
             return (

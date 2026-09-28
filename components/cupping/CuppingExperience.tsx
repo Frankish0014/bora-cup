@@ -13,7 +13,7 @@ import { draftsFromSaved, mergeUnsavedDrafts, parseStoredDrafts, readDraftSnapsh
 import { cn } from "@/lib/utils";
 import type { CoffeeLot } from "@/types/domain";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 type SavedEvaluation = {
   coffee_lot_id: string;
@@ -35,6 +35,11 @@ export function CuppingExperience({
   evaluations: SavedEvaluation[];
 }) {
   const router = useRouter();
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("snap-y", "snap-proximity");
+    return () => root.classList.remove("snap-y", "snap-proximity");
+  }, []);
   const [overrides, setOverrides] = useState<Record<string, Partial<Draft>>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -98,21 +103,18 @@ export function CuppingExperience({
       <SessionHeader sessionName={sessionName}>
         <CuppingProgress done={coffees.map((coffee) => isDraftComplete(drafts[coffee.id]))} />
       </SessionHeader>
-      <div className="mx-auto w-full max-w-6xl space-y-8 px-3 pt-4 sm:px-5">
+      <div className="mx-auto w-full max-w-3xl space-y-3 px-3 pt-3 sm:px-5">
         {coffees.map((coffee, index) => {
           const draft = drafts[coffee.id];
           const complete = isDraftComplete(draft);
           return (
-            <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("scroll-mt-28", error && !complete && "rounded-[1.35rem] ring-2 ring-danger/40")}>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-                <div className="lg:sticky lg:top-28">
-                  <CoffeeInformationCard lot={coffee} position={index + 1} />
-                </div>
-                <div className="space-y-4">
+            <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("snap-start scroll-mt-24", error && !complete && "rounded-2xl ring-2 ring-danger/40")}>
+              <article className="card overflow-hidden">
+                <CoffeeInformationCard lot={coffee} position={index + 1} />
+                <div className="space-y-2.5 p-3 sm:p-4">
                   <CommentsField
                     id={`${coffee.id}-aroma`}
                     label="Aroma"
-                    hint="What do you notice in the aroma?"
                     placeholder="Jasmine, citrus, brown sugar…"
                     value={draft?.aroma ?? ""}
                     onChange={(aroma) => update(coffee.id, { aroma })}
@@ -120,7 +122,6 @@ export function CuppingExperience({
                   <CommentsField
                     id={`${coffee.id}-flavor`}
                     label="Flavor"
-                    hint="What do you notice in the flavor?"
                     placeholder="Stone fruit, cocoa, black tea…"
                     value={draft?.flavor ?? ""}
                     onChange={(flavor) => update(coffee.id, { flavor })}
@@ -128,21 +129,20 @@ export function CuppingExperience({
                   <CommentsField
                     id={`${coffee.id}-overall`}
                     label="Overall"
-                    hint="How does the coffee come together?"
                     placeholder="Clean, sweet, and lingering…"
                     value={draft?.overall ?? ""}
                     onChange={(overall) => update(coffee.id, { overall })}
                   />
                   <RatingSelector label="Rating" group={`${coffee.id}-rating`} value={draft?.score ?? null} onChange={(score) => update(coffee.id, { score })} />
                 </div>
-              </div>
+              </article>
             </section>
           );
         })}
       </div>
-      <div className="h-28" aria-hidden="true" />
+      <div className="h-20" aria-hidden="true" />
       <div className="sticky bottom-0 z-20 border-t border-line bg-paper/90 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-6xl space-y-3 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+        <div className="mx-auto w-full max-w-3xl space-y-2 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-5">
           {error ? <Alert>{error}</Alert> : null}
           <Button className="min-h-12 w-full text-base" onClick={handleSave} disabled={pending}>
             {pending ? "Saving…" : "Save and submit"}

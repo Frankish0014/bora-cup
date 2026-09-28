@@ -9,7 +9,7 @@ export function CoffeeInformationCard({ lot, position }: { lot: CoffeeFields & {
     <section aria-labelledby="coffee-title" className="card overflow-hidden">
       <div className="bg-leaf px-5 py-5 text-white sm:px-6">
         {position ? <p className="text-xs font-medium text-white/75 tabular">Coffee No. {position}</p> : null}
-        <h2 id="coffee-title" tabIndex={-1} className="mt-1 text-3xl leading-[1.1] text-white outline-none sm:text-4xl">
+        <h2 id={position ? `coffee-title-${position}` : "coffee-title"} tabIndex={-1} className="mt-1 text-3xl leading-[1.1] text-white outline-none sm:text-4xl">
           {lot.lot_name}
         </h2>
       </div>

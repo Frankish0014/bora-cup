@@ -1,7 +1,7 @@
 import { isRatingScore } from "@/lib/ratings";
 
-export const INCOMPLETE_RATINGS_MESSAGE = "Please complete aroma, flavor, overall, and the rating before continuing.";
-export const INCOMPLETE_SUBMISSION_MESSAGE = "Please complete aroma, flavor, overall, and the rating for every coffee before submitting.";
+export const INCOMPLETE_RATINGS_MESSAGE = "Please complete aroma, flavor, overall, and the rating for every coffee before saving.";
+export const INCOMPLETE_SUBMISSION_MESSAGE = "Please complete aroma, flavor, overall, and the rating for every coffee before saving.";
 export const SAVE_FAILED_MESSAGE = "Something went wrong while saving your evaluation. Please check your connection and try again.";
 export const COMMENT_MAX_LENGTH = 300;
 

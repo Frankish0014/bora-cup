@@ -35,7 +35,7 @@ export default async function HomePage() {
           <p className="text-sm font-medium text-white/80">{eventName}</p>
           <div className="mt-8">
             <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl">Digital cupping</h1>
-            <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Taste each coffee, score it, and share your notes. No account needed.</p>
+            <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Scroll through the coffees, write your notes, and save the session once. No account needed.</p>
           </div>
           <p className="mt-8 text-sm text-white/70">At the table, scan the QR code for your session.</p>
         </section>

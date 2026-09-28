@@ -1,31 +1,19 @@
 import { cn } from "@/lib/utils";
 
-export function CuppingProgress({ current, total }: { current: number; total: number }) {
-  const segments = Array.from({ length: Math.max(total, 1) }, (_, index) => index + 1);
+export function CuppingProgress({ done }: { done: boolean[] }) {
+  const total = Math.max(done.length, 1);
+  const completed = done.filter(Boolean).length;
   return (
-    <div
-      className="mt-3"
-      role="progressbar"
-      aria-valuenow={current}
-      aria-valuemin={1}
-      aria-valuemax={Math.max(total, 1)}
-      aria-label={`Coffee ${current} of ${total}`}
-    >
+    <div className="mt-3" role="progressbar" aria-valuenow={completed} aria-valuemin={0} aria-valuemax={total} aria-label={`${completed} of ${done.length} coffees complete`}>
       <div className="flex items-baseline justify-between text-xs">
         <p className="font-medium text-ink tabular">
-          Coffee {current} <span className="font-normal text-ink-mute">of {total}</span>
+          {completed} <span className="font-normal text-ink-mute">of {done.length} complete</span>
         </p>
-        <p className="text-ink-mute tabular">{Math.round(((current - 1) / Math.max(total, 1)) * 100)}% done</p>
+        <p className="text-ink-mute tabular">{Math.round((completed / total) * 100)}%</p>
       </div>
       <div className="mt-2 flex gap-1" aria-hidden="true">
-        {segments.map((segment) => (
-          <span
-            key={segment}
-            className={cn(
-              "h-1 flex-1 rounded-full transition-colors duration-300",
-              segment < current ? "bg-leaf" : segment === current ? "bg-leaf/50" : "bg-paper-3",
-            )}
-          />
+        {done.map((complete, index) => (
+          <span key={index} className={cn("h-1 flex-1 rounded-full transition-colors duration-300", complete ? "bg-leaf" : "bg-paper-3")} />
         ))}
       </div>
     </div>

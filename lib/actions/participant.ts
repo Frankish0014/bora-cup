@@ -6,7 +6,7 @@ import { getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
 import { AppError, friendlyError, throwIfError } from "@/lib/errors";
 import { addResumeToken, parseResumeTokens, RESUME_COOKIE, resumeCookieOptions } from "@/lib/resume";
 import { getServiceClient } from "@/lib/supabase/admin";
-import { evaluationSchema, participantSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
+import { evaluationSchema, participantSchema, sessionSubmissionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
 
 async function authorizedRun(participantSessionId: string) {
   const cookieStore = await cookies();
@@ -158,6 +158,57 @@ export async function saveEvaluation(input: unknown): Promise<ActionResult> {
       { onConflict: "participant_session_id,coffee_lot_id" },
     );
     throwIfError(error, SAVE_FAILED_MESSAGE);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, SAVE_FAILED_MESSAGE) };
+  }
+}
+
+export async function saveAndSubmitCupping(input: unknown): Promise<ActionResult> {
+  const parsed = sessionSubmissionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: INCOMPLETE_SUBMISSION_MESSAGE, fieldErrors: zodFieldErrors(parsed.error) };
+  }
+
+  try {
+    const run = await authorizedRun(parsed.data.participantSessionId);
+    if (run.status === "completed") return { ok: true };
+    if (run.status !== "in_progress") throw new AppError("This cupping has already been submitted.");
+    const sessionActive = Array.isArray(run.sessions) ? run.sessions[0]?.active : run.sessions?.active;
+    if (sessionActive === false) throw new AppError("This cupping session is not open right now.");
+
+    const supabase = getServiceClient();
+    const { data: coffees, error: coffeeError } = await supabase.from("coffee_lots").select("id").eq("session_id", run.session_id).eq("active", true);
+    throwIfError(coffeeError, SAVE_FAILED_MESSAGE);
+    const coffeeIds = new Set((coffees ?? []).map((coffee) => coffee.id as string));
+    const submittedIds = new Set(parsed.data.evaluations.map((evaluation) => evaluation.coffeeLotId));
+    const coversEveryCoffee = (coffees ?? []).every((coffee) => submittedIds.has(coffee.id as string));
+    const onlySessionCoffees = parsed.data.evaluations.every((evaluation) => coffeeIds.has(evaluation.coffeeLotId));
+    if (!coversEveryCoffee || !onlySessionCoffees || coffeeIds.size === 0) {
+      throw new AppError(INCOMPLETE_SUBMISSION_MESSAGE);
+    }
+
+    const { error } = await supabase.from("evaluations").upsert(
+      parsed.data.evaluations.map((evaluation) => ({
+        participant_session_id: run.id,
+        participant_id: run.participant_id,
+        session_id: run.session_id,
+        coffee_lot_id: evaluation.coffeeLotId,
+        aroma_score: evaluation.score,
+        flavor_score: evaluation.score,
+        overall_score: evaluation.score,
+        comments: serializeNotes(evaluation),
+      })),
+      { onConflict: "participant_session_id,coffee_lot_id" },
+    );
+    throwIfError(error, SAVE_FAILED_MESSAGE);
+
+    const { error: completeError } = await supabase
+      .from("participant_sessions")
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", run.id)
+      .eq("status", "in_progress");
+    throwIfError(completeError, SAVE_FAILED_MESSAGE);
     return { ok: true };
   } catch (error) {
     return { ok: false, message: friendlyError(error, SAVE_FAILED_MESSAGE) };

@@ -12,12 +12,14 @@ export function RatingSelector({
   label,
   value,
   onChange,
+  group,
 }: {
   label: "Aroma" | "Flavor" | "Overall" | "Rating";
   value: number | null;
   onChange: (score: number) => void;
+  group?: string;
 }) {
-  const name = label.toLowerCase();
+  const name = group ?? label.toLowerCase();
   const selected = RATING_OPTIONS.find((option) => option.score === value);
   return (
     <fieldset className="card p-5 sm:p-6">

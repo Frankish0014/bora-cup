@@ -12,7 +12,9 @@ export default function LoadingCup() {
           </div>
         </div>
       </div>
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 px-3 pt-4 sm:px-5 lg:grid-cols-2">
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 px-3 pt-4 sm:px-5">
+        {Array.from({ length: 2 }, (_, block) => (
+          <div key={block} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="card overflow-hidden">
           <div className="h-28 animate-pulse bg-leaf/30" />
           <div className="grid grid-cols-2 gap-4 p-6">
@@ -37,6 +39,8 @@ export default function LoadingCup() {
             </div>
           </div>
         </div>
+          </div>
+        ))}
       </div>
     </main>
   );

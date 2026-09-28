@@ -25,15 +25,8 @@ async function loadCup(slug: string) {
   }
 }
 
-export default async function CupPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ i?: string; view?: string }>;
-}) {
+export default async function CupPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const query = await searchParams;
   if (!isSlug(slug)) {
     return <StatusScreen title="Session not found" message="We couldn't find that cupping session. Check the QR code and try again." />;
   }
@@ -61,8 +54,6 @@ export default async function CupPage({
       participantSessionId={loaded.run.id}
       coffees={loaded.coffees}
       evaluations={loaded.evaluations}
-      initialIndex={Number(query.i ?? 0) || 0}
-      initialView={query.view === "review" ? "review" : "cup"}
     />
   );
 }

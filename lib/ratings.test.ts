@@ -44,7 +44,7 @@ describe("participant validation", () => {
 
 describe("cupping navigation", () => {
   it("requires one rating before continuing", () => {
-    expect(INCOMPLETE_RATINGS_MESSAGE).toBe("Please complete aroma, flavor, overall, and the rating before continuing.");
+    expect(INCOMPLETE_RATINGS_MESSAGE).toBe("Please complete aroma, flavor, overall, and the rating for every coffee before saving.");
     expect(isDraftComplete({ score: null, aroma: "floral", flavor: "cocoa", overall: "sweet" })).toBe(false);
     expect(isDraftComplete({ score: 5, aroma: "", flavor: "", overall: "" })).toBe(false);
     expect(isDraftComplete({ score: 5, aroma: "floral", flavor: "cocoa", overall: "sweet" })).toBe(true);

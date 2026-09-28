@@ -60,12 +60,12 @@ export function SessionEntry({
           <div className="card p-5 sm:p-6">
             <h2 className="text-sm font-semibold text-ink">How it works</h2>
             <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 min-[420px]:grid-cols-2">
-              <Fact term="Coffees" detail={`${coffeeCount}, one at a time`} />
+              <Fact term="Coffees" detail={`${coffeeCount} on one page`} />
               <Fact term="Notes" detail="Aroma, flavor, overall" />
               <Fact term="Scale" detail="1 OK to 5 Take My Money, once" />
               <Fact term="Comments" detail="Required" />
             </dl>
-            <p className="mt-5 border-t border-line pt-4 text-sm leading-6 text-ink-soft">Your scores save automatically after each coffee. You can go back and adjust any coffee before submitting.</p>
+            <p className="mt-5 border-t border-line pt-4 text-sm leading-6 text-ink-soft">Scroll through every coffee, then save once. Your notes and ratings are stored for the admin team.</p>
           </div>
           <Button className="mt-5 w-full min-h-14 text-base" onClick={() => setStarted(true)}>
             Start cupping

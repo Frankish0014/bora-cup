@@ -32,7 +32,7 @@ describe("RatingSelector", () => {
     expect(screen.getAllByText("OK").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Take My Money").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Save & next" }));
-    expect(screen.getByRole("alert").textContent).toContain("Please complete aroma, flavor, overall, and the rating before continuing.");
+    expect(screen.getByRole("alert").textContent).toContain("Please complete aroma, flavor, overall, and the rating for every coffee before saving.");
   });
 
   it("keeps a selected score", () => {

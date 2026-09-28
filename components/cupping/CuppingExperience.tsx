@@ -2,19 +2,18 @@
 
 import { CoffeeInformationCard } from "@/components/cupping/CoffeeInformationCard";
 import { CommentsField } from "@/components/cupping/CommentsField";
-import { CuppingNavigation } from "@/components/cupping/CuppingNavigation";
 import { CuppingProgress } from "@/components/cupping/CuppingProgress";
-import { CuppingReview } from "@/components/cupping/CuppingReview";
 import { RatingSelector } from "@/components/cupping/RatingSelector";
 import { SessionHeader } from "@/components/cupping/SessionHeader";
+import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/field";
-import { saveEvaluation, submitCupping } from "@/lib/actions/participant";
-import { INCOMPLETE_RATINGS_MESSAGE, INCOMPLETE_SUBMISSION_MESSAGE, isDraftComplete, type Draft } from "@/lib/cupping";
+import { saveAndSubmitCupping } from "@/lib/actions/participant";
+import { INCOMPLETE_SUBMISSION_MESSAGE, isDraftComplete, type Draft } from "@/lib/cupping";
 import { draftsFromSaved, mergeUnsavedDrafts, parseStoredDrafts, readDraftSnapshot, writeDrafts } from "@/lib/draft-storage";
-import { clampIndex } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { CoffeeLot } from "@/types/domain";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 type SavedEvaluation = {
   coffee_lot_id: string;
@@ -28,20 +27,14 @@ export function CuppingExperience({
   participantSessionId,
   coffees,
   evaluations,
-  initialIndex,
-  initialView,
 }: {
   slug: string;
   sessionName: string;
   participantSessionId: string;
   coffees: CoffeeLot[];
   evaluations: SavedEvaluation[];
-  initialIndex: number;
-  initialView: "cup" | "review";
 }) {
   const router = useRouter();
-  const [index, setIndex] = useState(() => clampIndex(initialIndex, coffees.length));
-  const [view, setView] = useState(initialView);
   const [overrides, setOverrides] = useState<Record<string, Partial<Draft>>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -61,68 +54,35 @@ export function CuppingExperience({
     return next;
   }, [coffees, evaluations, overrides, snapshot]);
 
-  useEffect(() => {
-    const title = document.getElementById("coffee-title");
-    if (title instanceof HTMLElement) title.focus();
-    window.scrollTo(0, 0);
-  }, [index, view]);
-
-  const coffee = coffees[index];
-  const draft = coffee ? drafts[coffee.id] : undefined;
-
-  function update(partial: Partial<Draft>) {
-    if (!coffee) return;
-    const nextOverrides = { ...overrides, [coffee.id]: { ...overrides[coffee.id], ...partial } };
+  function update(coffeeId: string, partial: Partial<Draft>) {
+    const nextOverrides = { ...overrides, [coffeeId]: { ...overrides[coffeeId], ...partial } };
     setOverrides(nextOverrides);
-    const nextDrafts = { ...drafts, [coffee.id]: { ...drafts[coffee.id], ...partial } };
+    const nextDrafts = { ...drafts, [coffeeId]: { ...drafts[coffeeId], ...partial } };
     writeDrafts(participantSessionId, nextDrafts);
     setError(null);
   }
 
-  function showCoffee(nextIndex: number) {
-    const safe = clampIndex(nextIndex, coffees.length);
-    setView("cup");
-    setIndex(safe);
-    setError(null);
-    router.replace(`/session/${slug}/cup?i=${safe}`, { scroll: false });
-  }
-
-  async function handleNext() {
-    if (!coffee || !draft || !isDraftComplete(draft)) {
-      setError(INCOMPLETE_RATINGS_MESSAGE);
-      return;
-    }
-    setPending(true);
-    const result = await saveEvaluation({
-      participantSessionId,
-      coffeeLotId: coffee.id,
-      score: draft.score,
-      aroma: draft.aroma,
-      flavor: draft.flavor,
-      overall: draft.overall,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    if (index < coffees.length - 1) {
-      showCoffee(index + 1);
-      return;
-    }
-    setView("review");
-    setError(null);
-    router.replace(`/session/${slug}/cup?view=review`, { scroll: false });
-  }
-
-  async function handleSubmit() {
-    const incomplete = coffees.some((item) => !isDraftComplete(drafts[item.id]));
-    if (incomplete) {
+  async function handleSave() {
+    const firstIncomplete = coffees.find((coffee) => !isDraftComplete(drafts[coffee.id]));
+    if (firstIncomplete) {
       setError(INCOMPLETE_SUBMISSION_MESSAGE);
+      document.getElementById(`coffee-${firstIncomplete.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     setPending(true);
-    const result = await submitCupping(participantSessionId);
+    const result = await saveAndSubmitCupping({
+      participantSessionId,
+      evaluations: coffees.map((coffee) => {
+        const draft = drafts[coffee.id];
+        return {
+          coffeeLotId: coffee.id,
+          score: draft.score,
+          aroma: draft.aroma,
+          flavor: draft.flavor,
+          overall: draft.overall,
+        };
+      }),
+    });
     setPending(false);
     if (!result.ok) {
       setError(result.message);
@@ -131,64 +91,62 @@ export function CuppingExperience({
     router.push(`/session/${slug}/complete`);
   }
 
-  if (!coffee) return null;
-
-  if (view === "review") {
-    return (
-      <CuppingReview
-        coffees={coffees}
-        drafts={drafts}
-        pending={pending}
-        error={error}
-        onEdit={showCoffee}
-        onBack={() => showCoffee(coffees.length - 1)}
-        onSubmit={handleSubmit}
-      />
-    );
-  }
+  if (coffees.length === 0) return null;
 
   return (
     <div className="min-h-dvh">
       <SessionHeader sessionName={sessionName}>
-        <CuppingProgress current={index + 1} total={coffees.length} />
+        <CuppingProgress done={coffees.map((coffee) => isDraftComplete(drafts[coffee.id]))} />
       </SessionHeader>
-      <div key={coffee.id} className="animate-rise mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 px-3 pt-4 sm:px-5 lg:grid-cols-2 lg:items-start">
-        <div className="lg:sticky lg:top-28">
-          <CoffeeInformationCard lot={coffee} position={index + 1} />
-        </div>
-        <div className="space-y-4">
-          <CommentsField
-            id="aroma"
-            label="Aroma"
-            hint="What do you notice in the aroma?"
-            placeholder="Jasmine, citrus, brown sugar…"
-            value={draft?.aroma ?? ""}
-            onChange={(aroma) => update({ aroma })}
-          />
-          <CommentsField
-            id="flavor"
-            label="Flavor"
-            hint="What do you notice in the flavor?"
-            placeholder="Stone fruit, cocoa, black tea…"
-            value={draft?.flavor ?? ""}
-            onChange={(flavor) => update({ flavor })}
-          />
-          <CommentsField
-            id="overall"
-            label="Overall"
-            hint="How does the coffee come together?"
-            placeholder="Clean, sweet, and lingering…"
-            value={draft?.overall ?? ""}
-            onChange={(overall) => update({ overall })}
-          />
-          <RatingSelector label="Rating" value={draft?.score ?? null} onChange={(score) => update({ score })} />
-          {error ? <Alert>{error}</Alert> : null}
-        </div>
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-3 pt-4 sm:px-5">
+        {coffees.map((coffee, index) => {
+          const draft = drafts[coffee.id];
+          const complete = isDraftComplete(draft);
+          return (
+            <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("scroll-mt-28", error && !complete && "rounded-[1.35rem] ring-2 ring-danger/40")}>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
+                <div className="lg:sticky lg:top-28">
+                  <CoffeeInformationCard lot={coffee} position={index + 1} />
+                </div>
+                <div className="space-y-4">
+                  <CommentsField
+                    id={`${coffee.id}-aroma`}
+                    label="Aroma"
+                    hint="What do you notice in the aroma?"
+                    placeholder="Jasmine, citrus, brown sugar…"
+                    value={draft?.aroma ?? ""}
+                    onChange={(aroma) => update(coffee.id, { aroma })}
+                  />
+                  <CommentsField
+                    id={`${coffee.id}-flavor`}
+                    label="Flavor"
+                    hint="What do you notice in the flavor?"
+                    placeholder="Stone fruit, cocoa, black tea…"
+                    value={draft?.flavor ?? ""}
+                    onChange={(flavor) => update(coffee.id, { flavor })}
+                  />
+                  <CommentsField
+                    id={`${coffee.id}-overall`}
+                    label="Overall"
+                    hint="How does the coffee come together?"
+                    placeholder="Clean, sweet, and lingering…"
+                    value={draft?.overall ?? ""}
+                    onChange={(overall) => update(coffee.id, { overall })}
+                  />
+                  <RatingSelector label="Rating" group={`${coffee.id}-rating`} value={draft?.score ?? null} onChange={(score) => update(coffee.id, { score })} />
+                </div>
+              </div>
+            </section>
+          );
+        })}
       </div>
-      <div className="h-24" aria-hidden="true" />
+      <div className="h-28" aria-hidden="true" />
       <div className="sticky bottom-0 z-20 border-t border-line bg-paper/90 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-6xl px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
-          <CuppingNavigation isFirst={index === 0} pending={pending} onBack={() => showCoffee(index - 1)} onNext={handleNext} />
+        <div className="mx-auto w-full max-w-6xl space-y-3 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+          {error ? <Alert>{error}</Alert> : null}
+          <Button className="min-h-12 w-full text-base" onClick={handleSave} disabled={pending}>
+            {pending ? "Saving…" : "Save and submit"}
+          </Button>
         </div>
       </div>
     </div>

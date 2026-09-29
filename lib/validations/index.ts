@@ -114,6 +114,22 @@ export const coffeeSchema = z.object({
   active: z.boolean(),
 });
 
+export const organizerSchema = z.object({
+  name: z.string().trim().max(120, "Name is too long."),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address.").max(254).transform((value) => value.toLowerCase()),
+  password: z.string().min(8, "Use at least 8 characters.").max(72, "Password is too long."),
+});
+
+export const organizerUpdateSchema = z.object({
+  userId: z.string().uuid(),
+  name: z.string().trim().max(120, "Name is too long."),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address.").max(254).transform((value) => value.toLowerCase()),
+  password: z
+    .string()
+    .max(72, "Password is too long.")
+    .refine((value) => value.length === 0 || value.length >= 8, "Use at least 8 characters."),
+});
+
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };

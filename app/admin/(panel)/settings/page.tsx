@@ -1,5 +1,8 @@
+import { OrganizersPanel } from "@/components/admin/OrganizersPanel";
 import { PageHeader, SectionTitle } from "@/components/admin/PageHeader";
 import { Badge } from "@/components/ui/badge";
+import { requireAdmin } from "@/lib/auth";
+import { getOrganizers } from "@/lib/data/organizers";
 import { RATING_OPTIONS } from "@/lib/ratings";
 import { isAuthConfigured, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { getAppUrl } from "@/lib/url";
@@ -7,12 +10,12 @@ import { getAppUrl } from "@/lib/url";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const appUrl = await getAppUrl();
+  const [appUrl, user, organizers] = await Promise.all([getAppUrl(), requireAdmin(), getOrganizers()]);
   const database = isSupabaseConfigured();
   const auth = isAuthConfigured();
   return (
     <div>
-      <PageHeader title="Settings" description="The cupping scale and connection status for this deployment." />
+      <PageHeader title="Settings" description="Connection status, the cupping scale, and who can sign in to manage the cupping." />
       <dl className="card divide-y divide-line">
         <Row term="App URL" detail={appUrl || "Not set"} />
         <Row term="Database" detail={database ? "Connected" : "Missing service role key or URL"} ok={database} />
@@ -31,16 +34,9 @@ export default async function SettingsPage() {
         </ol>
       </section>
 
-      <section className="mt-10 max-w-2xl">
-        <SectionTitle>Administrators</SectionTitle>
-        <div className="card p-5 text-[15px] leading-7 text-ink-soft">
-          <p>
-            Create a user in Supabase Authentication, then add their id to <code className="rounded bg-paper px-1.5 py-0.5 font-mono text-sm text-ink">admin_profiles</code>. The seed script
-            does this when <code className="rounded bg-paper px-1.5 py-0.5 font-mono text-sm text-ink">ADMIN_EMAIL</code> and{" "}
-            <code className="rounded bg-paper px-1.5 py-0.5 font-mono text-sm text-ink">ADMIN_PASSWORD</code> are set.
-          </p>
-          <p className="mt-3">Results and participant details are never public. Only signed-in administrators can see this area.</p>
-        </div>
+      <section className="mt-10">
+        <SectionTitle description="Organizers sign in and can add sessions, coffee lots, and everything else in this area.">Organizers</SectionTitle>
+        <OrganizersPanel organizers={organizers} currentUserId={user.id} />
       </section>
     </div>
   );

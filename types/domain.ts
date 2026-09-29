@@ -1,3 +1,11 @@
+export type Organizer = {
+  id: string;
+  email: string;
+  name: string | null;
+  createdAt: string;
+  isSuper: boolean;
+};
+
 export type EventRecord = {
   id: string;
   name: string;

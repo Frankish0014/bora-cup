@@ -63,6 +63,45 @@ export async function uploadCoffeePhoto(formData: FormData): Promise<ActionResul
   }
 }
 
+export async function uploadSessionPhoto(formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const sessionId = String(formData.get("sessionId") ?? "");
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) return { ok: true };
+  const extension = PHOTO_TYPES[file.type];
+  if (!extension) return { ok: false, message: "Use a JPG, PNG, or WebP photo." };
+  if (file.size > 4 * 1024 * 1024) return { ok: false, message: "Use a photo under 4 MB." };
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return { ok: false, message: "That session could not be found." };
+
+  try {
+    const supabase = getServiceClient();
+    const bucket = "session-photos";
+    const { data: existingBucket } = await supabase.storage.getBucket(bucket);
+    if (!existingBucket) {
+      const { error: bucketError } = await supabase.storage.createBucket(bucket, {
+        public: true,
+        fileSizeLimit: "4MB",
+        allowedMimeTypes: Object.keys(PHOTO_TYPES),
+      });
+      if (bucketError && !/already exists/i.test(bucketError.message)) throw new AppError("Something went wrong while saving the photo.");
+    }
+
+    const path = `${sessionId}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
+    throwIfError(uploadError, "Something went wrong while saving the photo.");
+    const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(path);
+    const { error } = await supabase.from("sessions").update({ photo_url: `${publicUrl.publicUrl}?v=${Date.now()}` }).eq("id", sessionId);
+    if (error && /photo_url|schema cache/i.test(error.message)) {
+      throw new AppError("Run the session photo update in the Supabase SQL editor, then save the photo again.");
+    }
+    throwIfError(error, "Something went wrong while saving the photo.");
+    revalidateCupping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while saving the photo.") };
+  }
+}
+
 export async function saveEvent(id: string | null, input: unknown): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   const parsed = eventSchema.safeParse(input);

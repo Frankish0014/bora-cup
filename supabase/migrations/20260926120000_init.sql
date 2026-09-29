@@ -34,6 +34,7 @@ create table public.sessions (
   category text not null,
   slug text not null unique,
   description text,
+  photo_url text,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

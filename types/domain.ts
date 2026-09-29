@@ -16,6 +16,7 @@ export type SessionRecord = {
   category: string;
   slug: string;
   description: string | null;
+  photo_url: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;

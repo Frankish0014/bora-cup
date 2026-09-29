@@ -22,6 +22,7 @@ export async function getSessionBySlug(slug: string) {
     category: data.category as string,
     slug: data.slug as string,
     description: (data.description as string | null) ?? null,
+    photo_url: (data.photo_url as string | null) ?? null,
     active: Boolean(data.active),
     created_at: data.created_at as string,
     updated_at: data.updated_at as string,
@@ -31,13 +32,14 @@ export async function getSessionBySlug(slug: string) {
 
 export async function getActiveSessions() {
   const supabase = getServiceClient();
-  const { data, error } = await supabase
-    .from("sessions")
-    .select("id, name, slug, category, description, active, event_id, created_at, updated_at, events!inner(name, active)")
-    .eq("active", true)
-    .order("name");
-  throwIfError(error, "Something went wrong while loading sessions.");
-  const sessions = data ?? [];
+  const withPhoto = "id, name, slug, category, description, photo_url, active, event_id, created_at, updated_at, events!inner(name, active)";
+  const withoutPhoto = "id, name, slug, category, description, active, event_id, created_at, updated_at, events!inner(name, active)";
+  let result = await supabase.from("sessions").select(withPhoto).eq("active", true).order("name");
+  if (result.error && /photo_url|schema cache/i.test(result.error.message)) {
+    result = await supabase.from("sessions").select(withoutPhoto).eq("active", true).order("name");
+  }
+  throwIfError(result.error, "Something went wrong while loading sessions.");
+  const sessions = result.data ?? [];
   const counts = new Map<string, number>();
   if (sessions.length > 0) {
     const { data: lots, error: lotError } = await supabase
@@ -62,6 +64,7 @@ export async function getActiveSessions() {
       slug: session.slug as string,
       category: session.category as string,
       description: session.description as string | null,
+      photoUrl: (session.photo_url as string | null) ?? null,
       eventName: event?.name ?? null,
       coffeeCount: counts.get(session.id as string) ?? 0,
     };

@@ -3,7 +3,6 @@ import { Brand } from "@/components/ui/brand";
 import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { COMPETITION_STATS } from "@/lib/content/competition";
 import { getActiveSessions } from "@/lib/data/cupping";
-import { PLACEHOLDER_PHOTOS } from "@/lib/photos";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import Link from "next/link";
 
@@ -42,7 +41,7 @@ export default async function HomePage() {
             <p className="mt-8 text-sm text-white/70">At the table, scan the QR code for your session.</p>
           </div>
           <div className="relative min-h-full">
-            <img src="/photos/branch-ripe.jpg" alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-center" />
+            <img src="/photos/cup.jpg" alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-[center_62%]" />
           </div>
         </section>
 
@@ -55,14 +54,11 @@ export default async function HomePage() {
           </div>
           {sessions.length > 0 ? (
             <ul className="grid grid-cols-1 gap-3">
-              {sessions.map((session, index) => {
-                const drying = /washed/i.test(session.slug);
-                const beds = /special/i.test(session.slug);
-                const photo = drying ? "/photos/drying.jpg" : beds ? "/photos/beds.jpg" : PLACEHOLDER_PHOTOS[(index + 1) % PLACEHOLDER_PHOTOS.length];
-                const focus = drying ? "object-[22%_42%]" : beds ? "object-[center_62%]" : "object-center";
+              {sessions.map((session) => {
+                const photo = session.photoUrl?.trim();
                 return (
-                <li key={session.id} className="card grid grid-cols-[minmax(0,1fr)_7.25rem] items-stretch overflow-hidden sm:grid-cols-[minmax(0,1fr)_9rem]">
-                  <span className="flex min-w-0 items-center justify-between gap-3 p-4">
+                <li key={session.id} className={photo ? "card grid grid-cols-[minmax(0,1fr)_7.25rem] items-stretch overflow-hidden sm:grid-cols-[minmax(0,1fr)_9rem]" : "card flex items-center justify-between gap-3 p-4"}>
+                  <span className={photo ? "flex min-w-0 items-center justify-between gap-3 p-4" : "flex min-w-0 flex-1 items-center justify-between gap-3"}>
                     <span className="min-w-0">
                       <span className="block truncate text-[15px] font-semibold text-ink">{session.name}</span>
                       <span className="mt-0.5 block text-sm text-ink-soft">
@@ -73,13 +69,11 @@ export default async function HomePage() {
                       Open
                     </Link>
                   </span>
-                  <span className="relative min-h-full">
-                    <img
-                      src={photo}
-                      alt=""
-                      className={`photo-fade absolute inset-0 h-full w-full object-cover ${focus}`}
-                    />
-                  </span>
+                  {photo ? (
+                    <span className="relative min-h-full">
+                      <img src={photo} alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-center" />
+                    </span>
+                  ) : null}
                 </li>
                 );
               })}

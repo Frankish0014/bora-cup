@@ -1,5 +1,6 @@
 import "server-only";
 import { summarizeCoffees, type ScoreRow } from "@/lib/analytics";
+import { ratingScale, scoreOutOf100 } from "@/lib/ratings";
 import type { CsvRow } from "@/lib/csv";
 import { throwIfError } from "@/lib/errors";
 import type { EvaluationFilters } from "@/lib/filters";
@@ -115,7 +116,8 @@ export function evaluationToCsvRow(view: EvaluationView): CsvRow {
     Process: view.coffee.process,
     Altitude: view.coffee.altitude,
     Harvest: view.coffee.harvest,
-    Score: view.overall_score,
+    "Score / 100": scoreOutOf100(view.overall_score),
+    Rating: ratingScale(view.overall_score),
     Aroma: view.aroma_note,
     Flavor: view.flavor_note,
     Overall: view.overall_note,

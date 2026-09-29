@@ -6,7 +6,7 @@ import { CSV_COLUMNS, toCsv } from "@/lib/csv";
 import { INCOMPLETE_RATINGS_MESSAGE, formatNotes, isDraftComplete, nextIndex, previousIndex } from "@/lib/cupping";
 import { buildDemoCoffees, buildDemoEvaluations, demoScore } from "@/database/demo-data";
 import { parseEvaluationFilters, sanitizeSearch } from "@/lib/filters";
-import { RATING_OPTIONS, formatAverage, ratingLabel, scoreOutOf100 } from "@/lib/ratings";
+import { RATING_OPTIONS, formatAverage, ratingLabel, ratingScale, scoreOutOf100 } from "@/lib/ratings";
 import { addResumeToken, parseResumeTokens } from "@/lib/resume";
 import { safeAdminPath, slugify } from "@/lib/utils";
 import { participantSchema } from "@/lib/validations";
@@ -16,6 +16,12 @@ describe("rating scale", () => {
     expect(RATING_OPTIONS.map((option) => option.score)).toEqual([1, 2, 3, 4, 5]);
     expect(RATING_OPTIONS.map((option) => option.label)).toEqual(["OK", "Good", "Very Good", "Excellent", "Take My Money"]);
     expect(ratingLabel(5)).toBe("5 — Take My Money");
+    expect(ratingScale(4)).toBe("Excellent");
+    expect(ratingScale(5)).toBe("Take My Money");
+    expect(scoreOutOf100(1)).toBe(20);
+    expect(scoreOutOf100(2)).toBe(40);
+    expect(scoreOutOf100(3)).toBe(60);
+    expect(scoreOutOf100(4)).toBe(80);
     expect(scoreOutOf100(5)).toBe(100);
     expect(scoreOutOf100(4.33)).toBe(86.6);
     expect(formatAverage(3.17)).toBe("63.4");
@@ -132,7 +138,8 @@ describe("analytics and csv", () => {
         Process: "Fully Washed",
         Altitude: "1,900 MASL",
         Harvest: "2026",
-        Score: 4,
+        "Score / 100": 80,
+        Rating: "Excellent",
         Aroma: "Jasmine",
         Flavor: "Cocoa",
         Overall: 'He said "clean"',
@@ -140,7 +147,9 @@ describe("analytics and csv", () => {
       },
     ]);
     expect(csv.startsWith("\uFEFFParticipant Name,Email,Country")).toBe(true);
-    expect(CSV_COLUMNS).toHaveLength(21);
+    expect(CSV_COLUMNS).toHaveLength(22);
+    expect(csv).toContain("Score / 100,Rating,Aroma,Flavor,Overall");
+    expect(csv).toContain("80,Excellent,Jasmine");
     expect(csv).toContain("'=cmd");
     expect(csv).toContain('"He said ""clean"""');
   });

@@ -17,6 +17,12 @@ export function ratingLabel(score: number | null | undefined) {
   return match ? `${match.score} — ${match.label}` : "Not rated";
 }
 
+/** The rating words alone, without the 1–5 figure. */
+export function ratingScale(score: number | null | undefined) {
+  const match = RATING_OPTIONS.find((option) => option.score === score);
+  return match?.label ?? "";
+}
+
 /** A 1–5 cupping answer, reported on a 100-point scale. */
 export function scoreOutOf100(value: number | null) {
   if (value == null || Number.isNaN(value)) return null;

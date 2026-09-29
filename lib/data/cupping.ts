@@ -34,12 +34,23 @@ export async function getActiveSessions() {
   const supabase = getServiceClient();
   const withPhoto = "id, name, slug, category, description, photo_url, active, event_id, created_at, updated_at, events!inner(name, active)";
   const withoutPhoto = "id, name, slug, category, description, active, event_id, created_at, updated_at, events!inner(name, active)";
-  let result = await supabase.from("sessions").select(withPhoto).eq("active", true).order("name");
-  if (result.error && /photo_url|schema cache/i.test(result.error.message)) {
-    result = await supabase.from("sessions").select(withoutPhoto).eq("active", true).order("name");
-  }
+  const first = await supabase.from("sessions").select(withPhoto).eq("active", true).order("name");
+  const usedFallback = Boolean(first.error && /photo_url|schema cache/i.test(first.error.message));
+  const result = usedFallback ? await supabase.from("sessions").select(withoutPhoto).eq("active", true).order("name") : first;
   throwIfError(result.error, "Something went wrong while loading sessions.");
-  const sessions = result.data ?? [];
+  const sessions = (result.data ?? []) as Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category: string;
+    description: string | null;
+    photo_url?: string | null;
+    active: boolean;
+    event_id: string;
+    created_at: string;
+    updated_at: string;
+    events: { name: string; active: boolean } | Array<{ name: string; active: boolean }> | null;
+  }>;
   const counts = new Map<string, number>();
   if (sessions.length > 0) {
     const { data: lots, error: lotError } = await supabase

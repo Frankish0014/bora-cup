@@ -8,14 +8,15 @@ import { addResumeToken, parseResumeTokens, RESUME_COOKIE, resumeCookieOptions }
 import { getServiceClient } from "@/lib/supabase/admin";
 import { evaluationSchema, participantSchema, sessionSubmissionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
 
-function noteColumns(evaluation: { score: number; aroma: string; flavor: string; overall: string }) {
+function noteColumns(evaluation: { score: number; aroma: string | null; flavor: string | null; overall: string | null }) {
+  const note = (value: string | null) => value?.trim() || null;
   return {
     aroma_score: evaluation.score,
     flavor_score: evaluation.score,
     overall_score: evaluation.score,
-    aroma_note: evaluation.aroma.trim(),
-    flavor_note: evaluation.flavor.trim(),
-    overall_note: evaluation.overall.trim(),
+    aroma_note: note(evaluation.aroma),
+    flavor_note: note(evaluation.flavor),
+    overall_note: note(evaluation.overall),
     comments: null,
   };
 }
@@ -244,10 +245,7 @@ export async function submitCupping(participantSessionId: string): Promise<Actio
     const byCoffee = new Map((evaluations ?? []).map((evaluation) => [evaluation.coffee_lot_id as string, evaluation]));
     const missing = (coffees ?? []).some((coffee) => {
       const evaluation = byCoffee.get(coffee.id as string);
-      const aroma = (evaluation?.aroma_note as string | null | undefined)?.trim();
-      const flavor = (evaluation?.flavor_note as string | null | undefined)?.trim();
-      const overall = (evaluation?.overall_note as string | null | undefined)?.trim();
-      return !evaluation || evaluation.overall_score == null || !aroma || !flavor || !overall;
+      return !evaluation || evaluation.overall_score == null;
     });
     if (missing || (coffees ?? []).length === 0) {
       throw new AppError(INCOMPLETE_SUBMISSION_MESSAGE);

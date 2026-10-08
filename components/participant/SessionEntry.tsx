@@ -61,9 +61,8 @@ export function SessionEntry({
             <h2 className="text-sm font-semibold text-ink">How it works</h2>
             <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 min-[420px]:grid-cols-2">
               <Fact term="Coffees" detail={`${coffeeCount} on one page`} />
-              <Fact term="Notes" detail="Aroma, flavor, overall" />
-              <Fact term="Scale" detail="1 OK to 5 Take My Money, once" />
-              <Fact term="Comments" detail="Required" />
+              <Fact term="Rating" detail="Required, 1 OK to 5 Take My Money" />
+              <Fact term="Notes" detail="Aroma, flavor, overall — optional" />
             </dl>
             <p className="mt-5 border-t border-line pt-4 text-sm leading-6 text-ink-soft">Scroll through every coffee, then save once. Your notes and ratings are stored for the admin team.</p>
           </div>

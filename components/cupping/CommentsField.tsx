@@ -21,14 +21,12 @@ export function CommentsField({
           {label}
         </label>
         <span className="text-[11px] text-ink-mute tabular">
-          {value.length}/{COMMENT_MAX_LENGTH}
+          Optional · {value.length}/{COMMENT_MAX_LENGTH}
         </span>
       </div>
       <textarea
         id={id}
         value={value}
-        required
-        aria-required="true"
         maxLength={COMMENT_MAX_LENGTH}
         rows={2}
         placeholder={placeholder}

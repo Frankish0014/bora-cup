@@ -1,7 +1,7 @@
 import { isRatingScore } from "@/lib/ratings";
 
-export const INCOMPLETE_RATINGS_MESSAGE = "Please complete aroma, flavor, overall, and the rating for every coffee before saving.";
-export const INCOMPLETE_SUBMISSION_MESSAGE = "Please complete aroma, flavor, overall, and the rating for every coffee before saving.";
+export const INCOMPLETE_RATINGS_MESSAGE = "Please choose a rating for every coffee before saving.";
+export const INCOMPLETE_SUBMISSION_MESSAGE = "Please choose a rating for every coffee before saving.";
 export const SAVE_FAILED_MESSAGE = "Something went wrong while saving your evaluation. Please check your connection and try again.";
 export const COMMENT_MAX_LENGTH = 300;
 
@@ -16,12 +16,8 @@ export function emptyDraft(): Draft {
   return { score: null, aroma: "", flavor: "", overall: "" };
 }
 
-function hasNote(value: string | undefined) {
-  return Boolean(value?.trim());
-}
-
 export function isDraftComplete(draft: Draft | undefined): draft is Draft & { score: number } {
-  return Boolean(draft && hasNote(draft.aroma) && hasNote(draft.flavor) && hasNote(draft.overall) && isRatingScore(draft.score));
+  return Boolean(draft && isRatingScore(draft.score));
 }
 
 export function formatNotes(notes: { aroma?: string | null; flavor?: string | null; overall?: string | null } | null | undefined) {

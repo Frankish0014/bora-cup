@@ -9,10 +9,10 @@ export const COMPETITION_STATS = [
 ] as const;
 
 export const EVENT_DESCRIPTION =
-  "Best of Rwanda Cup Tour 2026, the national coffee competition organized by NAEB with CEPAR. International cuppers taste the selected lots and record aroma, flavor, and overall notes with one rating per coffee.";
+  "Best of Rwanda Cup Tour 2026, the national coffee competition organized by NAEB with CEPAR. International cuppers taste the selected lots and give one rating per coffee. Aroma, flavor, and overall notes are optional.";
 
 export const FULLY_WASHED_DESCRIPTION =
-  "Fully washed lots from washing stations across Rwanda, including the inaugural Mibirizi category. These coffees were pulped, fermented, washed, and dried on raised beds. Cup them in the listed order. Write aroma, flavor, and overall notes, then give one rating.";
+  "Fully washed lots from washing stations across Rwanda, including the inaugural Mibirizi category. These coffees were pulped, fermented, washed, and dried on raised beds. Cup them in the listed order and give one rating. Aroma, flavor, and overall notes are optional.";
 
 export const SPECIAL_PROCESS_DESCRIPTION =
-  "Special process lots from across Rwanda — naturals, honeys, and experimental fermentations. Cup them in the listed order. Write aroma, flavor, and overall notes, then give one rating.";
+  "Special process lots from across Rwanda — naturals, honeys, and experimental fermentations. Cup them in the listed order and give one rating. Aroma, flavor, and overall notes are optional.";

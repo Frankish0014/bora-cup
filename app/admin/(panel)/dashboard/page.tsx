@@ -12,6 +12,47 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
   const { evaluations } = stats;
+  const activeCoffees = stats.coffees.filter((coffee) => coffee.active);
+  const openSessions = stats.sessions.filter((session) => session.active);
+  const cuppingStarted = stats.participants > 0 || evaluations.length > 0;
+
+  if (!cuppingStarted) {
+    return (
+      <div>
+        <PageHeader
+          title="Best of Rwanda Cup Tour"
+          description="The table is ready for official cupping. Scores will appear here as cuppers save."
+          action={
+            <>
+              <Link href="/admin/qr-codes" className={buttonClasses("secondary", buttonSm)}>
+                QR codes
+              </Link>
+              <Link href="/admin/sessions" className={buttonClasses("primary", buttonSm)}>
+                Sessions
+              </Link>
+            </>
+          }
+        />
+        <div className="card p-5 sm:p-7">
+          <p className="text-[15px] font-semibold text-ink">No ratings yet</p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-ink-soft">Practice and demo cuppings have been cleared. Open sessions stay available for international cuppers.</p>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {openSessions.map((session) => {
+              const lots = activeCoffees.filter((coffee) => coffee.session_id === session.id).length;
+              return (
+                <li key={session.id} className="rounded-2xl border border-line bg-paper px-4 py-4">
+                  <p className="font-medium text-ink">{session.name}</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    {session.category} · {lots} {lots === 1 ? "coffee" : "coffees"}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   const overallAverage = average(evaluations.map((row) => row.overall_score));
   const overallDistribution = distribution(evaluations.map((row) => row.overall_score));
@@ -36,7 +77,7 @@ export default async function DashboardPage() {
     .sort((a, b) => b.value - a.value || b.count - a.count)
     .slice(0, 8);
 
-  const processes = groupTail(countBy(stats.coffees.map((coffee) => coffee.process?.trim() || "Not specified")), 5);
+  const processes = groupTail(countBy(activeCoffees.map((coffee) => coffee.process?.trim() || "Not specified")), 5);
   const timeline = bucketByTime(evaluations);
 
   return (
@@ -65,7 +106,7 @@ export default async function DashboardPage() {
         <Kpi label="Avg rating" value={formatAverage(overallAverage)} hint="out of 100" />
         <Kpi label="Completed" value={stats.completedSessions.toLocaleString("en-US")} hint="cupping sessions" />
         <Kpi label="In progress" value={stats.inProgressSessions.toLocaleString("en-US")} hint="cupping sessions" />
-        <Kpi label="Coffees rated" value={`${cuppedCoffees}/${stats.coffees.length}`} hint="have at least one rating" />
+        <Kpi label="Coffees rated" value={`${cuppedCoffees}/${activeCoffees.length}`} hint="have at least one rating" />
       </dl>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
@@ -132,13 +173,13 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-5 [&>*]:min-w-0">
-        <ChartCard title="Coffees by process" description="Processing methods across all lots." className="lg:col-span-2">
-          {stats.coffees.length === 0 ? (
+        <ChartCard title="Coffees by process" description="Processing methods across active lots." className="lg:col-span-2">
+          {activeCoffees.length === 0 ? (
             <ChartEmpty />
           ) : (
             <DonutChart
               centerLabel="coffee lots"
-              centerValue={String(stats.coffees.length)}
+              centerValue={String(activeCoffees.length)}
               slices={processes.map((process, index) => ({ label: process.label, value: process.count, color: SERIES_COLORS[index % SERIES_COLORS.length] }))}
             />
           )}

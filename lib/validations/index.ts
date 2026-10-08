@@ -40,18 +40,14 @@ export const participantSchema = z.object({
   role: optionalText(120),
 });
 
-const note = z
-  .string()
-  .trim()
-  .min(1, "This note is required.")
-  .max(COMMENT_MAX_LENGTH, "Comments must be 300 characters or fewer.");
+const optionalNote = optionalText(COMMENT_MAX_LENGTH);
 
 const cuppingNotesSchema = z.object({
   coffeeLotId: z.string().uuid(),
-  score: z.number().int().min(1).max(5),
-  aroma: note,
-  flavor: note,
-  overall: note,
+  score: z.number().int().min(1, "Choose a rating.").max(5),
+  aroma: optionalNote,
+  flavor: optionalNote,
+  overall: optionalNote,
 });
 
 export const sessionSubmissionSchema = z.object({
@@ -62,10 +58,10 @@ export const sessionSubmissionSchema = z.object({
 export const evaluationSchema = z.object({
   participantSessionId: z.string().uuid(),
   coffeeLotId: z.string().uuid(),
-  score: z.number().int().min(1).max(5),
-  aroma: note,
-  flavor: note,
-  overall: note,
+  score: z.number().int().min(1, "Choose a rating.").max(5),
+  aroma: optionalNote,
+  flavor: optionalNote,
+  overall: optionalNote,
 });
 
 export const eventSchema = z

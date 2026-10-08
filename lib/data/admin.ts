@@ -189,8 +189,8 @@ export async function getDashboardStats() {
     supabase.from("participants").select("*", { count: "exact", head: true }),
     supabase.from("participant_sessions").select("*", { count: "exact", head: true }).eq("status", "completed"),
     supabase.from("participant_sessions").select("*", { count: "exact", head: true }).eq("status", "in_progress"),
-    supabase.from("sessions").select("id, name, slug, category").order("name"),
-    supabase.from("coffee_lots").select("id, lot_name, session_id, process").order("display_order"),
+    supabase.from("sessions").select("id, name, slug, category, active").order("name"),
+    supabase.from("coffee_lots").select("id, lot_name, session_id, process, active").order("display_order"),
     supabase.from("participants").select("id, name, email, country, created_at").order("created_at", { ascending: false }).limit(6),
   ]);
   const failure = "Something went wrong while loading the dashboard.";
@@ -228,11 +228,11 @@ export async function getDashboardStats() {
     completedSessions: completed.count ?? 0,
     inProgressSessions: inProgress.count ?? 0,
     evaluations,
-    sessions: ((sessions.data ?? []) as Array<{ id: string; name: string; slug: string; category: string }>).map((session) => ({
+    sessions: ((sessions.data ?? []) as Array<{ id: string; name: string; slug: string; category: string; active: boolean }>).map((session) => ({
       ...session,
       evaluations: counts.get(session.id) ?? 0,
     })),
-    coffees: (coffees.data ?? []) as Array<{ id: string; lot_name: string; session_id: string; process: string | null }>,
+    coffees: (coffees.data ?? []) as Array<{ id: string; lot_name: string; session_id: string; process: string | null; active: boolean }>,
     recent: (recent.data ?? []) as Array<Pick<Participant, "id" | "name" | "email" | "country" | "created_at">>,
     countries,
   };

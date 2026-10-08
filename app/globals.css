@@ -138,6 +138,16 @@ input[type="date"] {
   mask-image: linear-gradient(to right, transparent 0%, black 22%);
 }
 
+.admin-nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -66,11 +66,11 @@ ADMIN_PASSWORD=
 1. Create a Supabase project.
 2. Open the SQL editor and run `supabase/migrations/20260926120000_init.sql`.
 3. Copy the project URL, anon key, and service role key into `.env.local`.
-4. Seed demo data with either:
-   - `npm run seed`, or
-   - the SQL editor and `supabase/seed.sql` (generate it with `npm run seed:sql` if you change the demo data).
+4. For an empty local database only, load sample lots with either:
+   - `ALLOW_SAMPLE_SEED=true npm run seed`, or
+   - the SQL editor and `supabase/seed.sql` (generate it with `npm run seed:sql` if you change the sample catalog).
 
-The seed creates one demo event, Fully Washed and Special Process sessions, 7 washed lots, 18 special-process lots, and sample evaluations. All of that data is fictional. It is not an official Best of Rwanda result.
+Do not run the seed against the live cupping database. The live lots reuse the same row IDs, so a seed would overwrite real names and stations.
 
 To create an administrator without the seed script:
 
@@ -117,7 +117,7 @@ Deploy on Vercel.
 1. Import the repository.
 2. Add the same environment variables. Set `NEXT_PUBLIC_APP_URL` to the production origin, including `https://`.
 3. Run the migration and seed in the production Supabase project.
-4. Create an administrator with a real password. Do not reuse the demo password.
+4. Create an administrator with a real password.
 
 The service role key stays in server environment variables. Do not prefix it with `NEXT_PUBLIC_`.
 
@@ -138,4 +138,4 @@ The service role key stays in server environment variables. Do not prefix it wit
 - `app/api/qr` and `app/api/export` — QR images and CSV export
 - `lib/actions` — validated server writes
 - `supabase/migrations` — schema and Row Level Security
-- `database/demo-data.ts` — fictional seed data
+- `database/demo-data.ts` — sample catalog for empty local databases

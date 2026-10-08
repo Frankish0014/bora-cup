@@ -106,7 +106,7 @@ export function SessionForm({
             <Input placeholder="Washed" {...form.register("category")} />
           </Field>
         </div>
-        <Field label="Description" hint="Optional" error={errors.description?.message}>
+        <Field label="Description" hint="Shown to cuppers on the session page." error={errors.description?.message}>
           <Textarea {...form.register("description")} />
         </Field>
         <Field label="Photo" hint="Optional. JPG, PNG, or WebP under 4 MB. Shown on the open sessions list.">

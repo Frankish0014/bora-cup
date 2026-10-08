@@ -22,6 +22,12 @@ loadEnv(".env.local");
 loadEnv(".env");
 
 async function main() {
+  if (process.env.ALLOW_SAMPLE_SEED !== "true") {
+    console.error("Refusing to seed. This overwrites lots that share the sample IDs used in the live cupping catalog.");
+    console.error("Set ALLOW_SAMPLE_SEED=true only on an empty local database.");
+    process.exit(1);
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -72,7 +78,7 @@ async function main() {
     console.log(`Admin access granted to ${email}.`);
   }
 
-  console.log("Demo data is ready. It is fictional and is not an official Best of Rwanda result.");
+  console.log("Sample catalog written. Do not run this against the live cupping database.");
 }
 
 main().catch((error) => {

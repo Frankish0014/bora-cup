@@ -21,9 +21,9 @@ const coffees = buildDemoCoffees();
 const runs = buildDemoParticipantSessions();
 const evaluations = buildDemoEvaluations();
 
-const sql = `-- Fictional demo data for local development.
--- These coffees, participants, and scores are not official Best of Rwanda results.
--- Safe to re-run.
+const sql = `-- Sample catalog for an empty local database only.
+-- Do not run this against the live Best of Rwanda cupping database.
+-- Safe to re-run on a blank project.
 
 begin;
 

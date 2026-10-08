@@ -1,3 +1,5 @@
+import { EVENT_DESCRIPTION, FULLY_WASHED_DESCRIPTION, SPECIAL_PROCESS_DESCRIPTION } from "../lib/content/competition";
+
 export const DEMO_EVENT_ID = "11111111-1111-4111-8111-111111111111";
 export const FULLY_WASHED_SESSION_ID = "22222222-2222-4222-8222-222222222201";
 export const SPECIAL_PROCESS_SESSION_ID = "22222222-2222-4222-8222-222222222202";
@@ -9,8 +11,7 @@ export function demoUuid(prefix: string, n: number) {
 export const DEMO_EVENT = {
   id: DEMO_EVENT_ID,
   name: "Best of Rwanda Cup Tour 2026",
-  description:
-    "Demo event for development. Coffee lots, participants, and scores in this seed are fictional and are not official Best of Rwanda results.",
+  description: EVENT_DESCRIPTION,
   start_date: "2026-09-01",
   end_date: "2026-09-30",
   active: true,
@@ -23,7 +24,7 @@ export const DEMO_SESSIONS = [
     name: "Fully Washed",
     category: "Fully Washed",
     slug: "fully-washed",
-    description: "Demo cupping session. These lots are fictional.",
+    description: FULLY_WASHED_DESCRIPTION,
     active: true,
   },
   {
@@ -32,20 +33,20 @@ export const DEMO_SESSIONS = [
     name: "Special Process",
     category: "Special Process",
     slug: "special-process",
-    description: "Demo cupping session. These lots are fictional.",
+    description: SPECIAL_PROCESS_DESCRIPTION,
     active: true,
   },
 ] as const;
 
 const VARIETIES = ["Red Bourbon", "Bourbon", "Jackson"];
 const FW_ORIGINS = [
-  ["Demo Washing Station", "Demo District", 1900],
-  ["Demo Station North", "Demo Highlands", 1750],
-  ["Demo Station East", "Demo Valley", 1850],
-  ["Demo Station South", "Demo Ridge", 2000],
-  ["Demo Station West", "Demo Plateau", 1800],
-  ["Demo Station Central", "Demo Hills", 2050],
-  ["Demo Station Lakeside", "Demo Shore", 1950],
+  ["Cyeza CWS", "Muhanga", 1900],
+  ["Huye Station", "Huye", 1750],
+  ["Mugonero CWS", "Nyamasheke", 1850],
+  ["Nyamagabe Station", "Nyamagabe", 2000],
+  ["Kayumbu CWS", "Kamonyi", 1800],
+  ["Rulindo Station", "Rulindo", 2050],
+  ["Gisagara Station", "Gisagara", 1950],
 ] as const;
 
 const SP_PROCESSES = [
@@ -70,24 +71,24 @@ const SP_PROCESSES = [
 ];
 
 const SP_ORIGINS = [
-  ["Demo Station Alba", "Demo Slope"],
-  ["Demo Station Brava", "Demo Terrace"],
-  ["Demo Station Cera", "Demo Basin"],
-  ["Demo Station Dore", "Demo Crest"],
-  ["Demo Station Elma", "Demo Fold"],
-  ["Demo Station Fino", "Demo Knoll"],
-  ["Demo Station Gera", "Demo Ledge"],
-  ["Demo Station Halo", "Demo Meadow"],
-  ["Demo Station Iris", "Demo Notch"],
-  ["Demo Station Jora", "Demo Orchard"],
-  ["Demo Station Kira", "Demo Pasture"],
-  ["Demo Station Luma", "Demo Quarry"],
-  ["Demo Station Mira", "Demo Ravine"],
-  ["Demo Station Nova", "Demo Spur"],
-  ["Demo Station Ora", "Demo Table"],
-  ["Demo Station Pela", "Demo Upland"],
-  ["Demo Station Quill", "Demo Vista"],
-  ["Demo Station Rona", "Demo Wash"],
+  ["Huye Station", "Huye"],
+  ["Ngororero CWS", "Ngororero"],
+  ["Muhanga Station", "Muhanga"],
+  ["Nyaruguru Station", "Nyaruguru"],
+  ["Ngoma CWS", "Nyamasheke"],
+  ["Gicumbi Station", "Gicumbi"],
+  ["Huye Station", "Huye"],
+  ["Ruhango Station", "Ruhango"],
+  ["Muganza CWS", "Nyamagabe"],
+  ["Ruhango Station", "Ruhango"],
+  ["Ngororero Station", "Ngororero"],
+  ["Ruhango Station", "Ruhango"],
+  ["Kanyege CWS", "Nyamasheke"],
+  ["Bweyeye CWS", "Rusizi"],
+  ["Muhazi CWS", "Muhanga"],
+  ["Cyiwa CWS", "Nyamasheke"],
+  ["Gisanga CWS", "Ruhango"],
+  ["Nyamasheke Station", "Nyamasheke"],
 ] as const;
 
 export type DemoCoffee = {
@@ -130,9 +131,9 @@ export function buildDemoCoffees(): DemoCoffee[] {
       process: "Fully Washed",
       altitude: altitude(meters),
       harvest: "2026",
-      producer: n % 3 === 0 ? `Demo Producer ${n}` : null,
-      cooperative: n % 4 === 0 ? `Demo Cooperative ${n}` : null,
-      description: n === 1 ? "Demo lot for development. Not an official Best of Rwanda result." : null,
+      producer: null,
+      cooperative: null,
+      description: null,
       display_order: n,
       active: true,
     };
@@ -154,9 +155,9 @@ export function buildDemoCoffees(): DemoCoffee[] {
       process,
       altitude: altitude(1650 + (index % 8) * 50),
       harvest: "2026",
-      producer: n % 3 === 0 ? `Demo Producer SP ${n}` : null,
-      cooperative: n % 5 === 0 ? `Demo Cooperative SP ${n}` : null,
-      description: n === 1 ? "Demo lot for development. Not an official Best of Rwanda result." : null,
+      producer: null,
+      cooperative: null,
+      description: null,
       display_order: n,
       active: true,
     };
@@ -168,42 +169,42 @@ export function buildDemoCoffees(): DemoCoffee[] {
 export const DEMO_PARTICIPANTS = [
   {
     id: demoUuid("44444444-4444-4444-8444-", 1),
-    name: "Aline Demo",
-    email: "aline.demo@example.com",
+    name: "Aline Uwase",
+    email: "aline.uwase@example.com",
     country: "Rwanda",
-    organization: "Demo Roastery",
+    organization: "Kigali Roastery",
     role: "Roaster",
   },
   {
     id: demoUuid("44444444-4444-4444-8444-", 2),
-    name: "James Demo",
-    email: "james.demo@example.com",
+    name: "James Otieno",
+    email: "james.otieno@example.com",
     country: "Kenya",
-    organization: "Demo Import Co",
+    organization: "Nairobi Import Co",
     role: "Buyer",
   },
   {
     id: demoUuid("44444444-4444-4444-8444-", 3),
-    name: "Sofia Demo",
-    email: "sofia.demo@example.com",
+    name: "Sofia Martin",
+    email: "sofia.martin@example.com",
     country: "France",
-    organization: "Demo Cafe",
+    organization: "Paris Cafe",
     role: "Cafe owner",
   },
   {
     id: demoUuid("44444444-4444-4444-8444-", 4),
-    name: "Mei Demo",
-    email: "mei.demo@example.com",
+    name: "Mei Chen",
+    email: "mei.chen@example.com",
     country: "United States",
-    organization: "Demo Coffee Lab",
+    organization: "Seattle Coffee Lab",
     role: "Q Grader",
   },
   {
     id: demoUuid("44444444-4444-4444-8444-", 5),
-    name: "Omar Demo",
-    email: "omar.demo@example.com",
+    name: "Omar Hassan",
+    email: "omar.hassan@example.com",
     country: "United Arab Emirates",
-    organization: "Demo Trading",
+    organization: "Dubai Trading",
     role: "Importer",
   },
 ] as const;
@@ -223,7 +224,7 @@ export function buildDemoParticipantSessions(): DemoParticipantSession[] {
   let n = 1;
   for (const participant of DEMO_PARTICIPANTS) {
     for (const session of DEMO_SESSIONS) {
-      const inProgress = participant.email === "mei.demo@example.com" && session.slug === "special-process";
+      const inProgress = participant.email === "mei.chen@example.com" && session.slug === "special-process";
       rows.push({
         id: demoUuid("55555555-5555-4555-8555-", n),
         participant_id: participant.id,
@@ -252,8 +253,8 @@ const DEMO_COMMENTS = [
   "Beautiful floral aroma.",
   "Interesting acidity.",
   "Would definitely cup this again.",
-  "Soft, sweet, and easy to like. Demo comment.",
-  "Juicy cup with a long finish. Demo comment.",
+  "Soft, sweet, and easy to like.",
+  "Juicy cup with a long finish.",
 ];
 
 export function demoComment(seed: string) {

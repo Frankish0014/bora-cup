@@ -113,25 +113,25 @@ export function CuppingExperience({
             <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("snap-start scroll-mt-24", error && !complete && "rounded-2xl ring-2 ring-danger/40")}>
               <article className="card overflow-hidden">
                 <CoffeeInformationCard lot={coffee} position={index + 1} />
-                <div className="space-y-4 p-4">
+                <div className="space-y-2.5 p-3 sm:space-y-4 sm:p-4">
                   <CommentsField
                     id={`${coffee.id}-aroma`}
                     label="Aroma"
-                    placeholder="Jasmine, citrus, brown sugar…"
+                    placeholder="Aroma notes"
                     value={draft?.aroma ?? ""}
                     onChange={(aroma) => update(coffee.id, { aroma })}
                   />
                   <CommentsField
                     id={`${coffee.id}-flavor`}
                     label="Flavor"
-                    placeholder="Stone fruit, cocoa, black tea…"
+                    placeholder="Flavor notes"
                     value={draft?.flavor ?? ""}
                     onChange={(flavor) => update(coffee.id, { flavor })}
                   />
                   <CommentsField
                     id={`${coffee.id}-overall`}
                     label="Overall"
-                    placeholder="Clean, sweet, and lingering…"
+                    placeholder="Overall impression"
                     value={draft?.overall ?? ""}
                     onChange={(overall) => update(coffee.id, { overall })}
                   />
@@ -142,11 +142,11 @@ export function CuppingExperience({
           );
         })}
       </div>
-      <div className="h-20" aria-hidden="true" />
+      <div className="h-16 sm:h-20" aria-hidden="true" />
       <div className="sticky bottom-0 z-20 border-t border-line bg-paper/90 backdrop-blur-md">
         <div className="mx-auto w-full max-w-3xl space-y-2 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-5">
           {error ? <Alert>{error}</Alert> : null}
-          <Button className="min-h-12 w-full text-base" onClick={handleSave} disabled={pending}>
+          <Button className="min-h-11 w-full text-base sm:min-h-12" onClick={handleSave} disabled={pending}>
             {pending ? "Saving…" : "Save and submit"}
           </Button>
         </div>

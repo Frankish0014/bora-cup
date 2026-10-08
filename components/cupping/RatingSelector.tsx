@@ -25,7 +25,7 @@ export function RatingSelector({
     <fieldset>
       <legend className="sr-only">{QUESTIONS[label]}</legend>
       <div className="flex items-center justify-between gap-3">
-        <p id={`${name}-question`} className="text-sm font-medium text-ink">
+        <p id={`${name}-question`} className="text-xs font-medium tracking-wide text-ink-soft">
           {label}
         </p>
         <p aria-live="polite" className="shrink-0">
@@ -36,7 +36,7 @@ export function RatingSelector({
           )}
         </p>
       </div>
-      <div className="mt-1.5 grid grid-cols-5 gap-1.5" role="radiogroup" aria-labelledby={`${name}-question`}>
+      <div className="mt-1 grid grid-cols-5 gap-1 sm:mt-1.5 sm:gap-1.5" role="radiogroup" aria-labelledby={`${name}-question`}>
         {RATING_OPTIONS.map((option) => (
           <RatingOption key={option.score} score={option.score} label={option.label} name={name} checked={value === option.score} onChange={onChange} />
         ))}

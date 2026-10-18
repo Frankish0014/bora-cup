@@ -1,6 +1,6 @@
 import { visibleCoffeeFields, type CoffeeFields } from "@/lib/coffee";
 
-const FACT_KEYS = ["process", "variety", "altitude", "harvest", "washing_station", "district", "country", "producer", "cooperative", "lot_number"] as const;
+const FACT_KEYS = ["process", "variety", "altitude", "harvest", "washing_station", "province", "district", "sector", "cell", "country", "producer", "cooperative", "lot_number"] as const;
 
 export function CoffeeInformationCard({ lot, position }: { lot: CoffeeFields & { lot_name: string }; position?: number }) {
   const fields = visibleCoffeeFields(lot).filter((field) => field.key !== "cupping_code");

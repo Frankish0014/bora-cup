@@ -32,7 +32,10 @@ export default async function CompletePage({ params }: { params: Promise<{ slug:
     return <StatusScreen title="Session not found" message="We couldn't find that cupping session. Check the QR code and try again." />;
   }
   if (loaded.status === "cup") redirect(`/session/${slug}/cup`);
-  if (loaded.status === "done") return <SubmissionConfirmation />;
+  if (loaded.status === "done") {
+    const session = await getSessionBySlug(slug);
+    return <SubmissionConfirmation slug={slug} eventName={session?.event?.name ?? session?.name} />;
+  }
   return (
     <StatusScreen tone="success" title="Thank you" message="If you just submitted, your feedback has been saved. Otherwise, start again from the session link.">
       <Link href={`/session/${slug}`} className={buttonClasses("primary")}>

@@ -2,6 +2,7 @@
 
 import { FormActions, FormSection } from "@/components/admin/FormSection";
 import { saveCoffee, uploadCoffeePhoto } from "@/lib/actions/admin";
+import { RWANDA_PROVINCES, RWANDA_DISTRICTS, provinceForDistrict } from "@/lib/rwanda";
 import { coffeeSchema } from "@/lib/validations";
 import { Alert, Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,6 @@ type Values = z.input<typeof coffeeSchema>;
 
 const ORIGIN_FIELDS = [
   ["country", "Country", "Rwanda"],
-  ["district", "District", "Nyamasheke"],
   ["washing_station", "Washing station", ""],
   ["producer", "Producer", ""],
   ["cooperative", "Cooperative", ""],
@@ -50,7 +50,10 @@ export function CoffeeForm({
       lot_number: defaults?.lot_number ?? "",
       cupping_code: defaults?.cupping_code ?? "",
       washing_station: defaults?.washing_station ?? "",
+      province: (typeof defaults?.province === "string" ? defaults.province : null) ?? provinceForDistrict(typeof defaults?.district === "string" ? defaults.district : null) ?? "",
       district: defaults?.district ?? "",
+      sector: defaults?.sector ?? "",
+      cell: defaults?.cell ?? "",
       country: defaults?.country ?? "Rwanda",
       variety: defaults?.variety ?? "",
       process: defaults?.process ?? "",
@@ -136,6 +139,28 @@ export function CoffeeForm({
               <Input placeholder={placeholder} {...form.register(name)} />
             </Field>
           ))}
+          <Field label="Province" hint="Optional. Rwanda administrative level.">
+            <Select {...form.register("province")}>
+              <option value="">Not specified</option>
+              {RWANDA_PROVINCES.map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="District" hint="Optional">
+            <Input list="rwanda-districts" placeholder="Nyamasheke" {...form.register("district")} />
+            <datalist id="rwanda-districts">
+              {RWANDA_PROVINCES.flatMap((province) => RWANDA_DISTRICTS[province].map((district) => <option key={district} value={district} />))}
+            </datalist>
+          </Field>
+          <Field label="Sector" hint="Optional">
+            <Input placeholder="Sector" {...form.register("sector")} />
+          </Field>
+          <Field label="Cell" hint="Optional">
+            <Input placeholder="Cell" {...form.register("cell")} />
+          </Field>
         </div>
       </FormSection>
       <FormSection title="Coffee" description="Processing and growing details.">

@@ -163,14 +163,23 @@ export async function saveSession(id: string | null, input: unknown): Promise<Ac
     if (clash && clash.id !== id) {
       return { ok: false, message: "That session link is already in use.", fieldErrors: { slug: "Choose a different slug." } };
     }
+    const values = parsed.data;
+    async function writeSession(payload: Record<string, unknown>) {
+      if (id) return supabase.from("sessions").update(payload).eq("id", id).select("id").maybeSingle();
+      return supabase.from("sessions").insert(payload).select("id").single();
+    }
+    let saved = await writeSession(values);
+    if (saved.error && /form_policy|form_type|schema cache/i.test(saved.error.message)) {
+      const { form_policy: _policy, form_type: _type, ...rest } = values;
+      saved = await writeSession(rest);
+    }
     if (id) {
-      const { error } = await supabase.from("sessions").update(parsed.data).eq("id", id);
-      throwIfError(error, "Something went wrong while saving the session.");
+      throwIfError(saved.error, "Something went wrong while saving the session.");
       revalidateCupping();
       revalidatePath(`/session/${parsed.data.slug}`);
       return { ok: true, data: { id } };
     }
-    const { data, error } = await supabase.from("sessions").insert(parsed.data).select("id").single();
+    const { data, error } = saved;
     throwIfError(error, "Something went wrong while saving the session.");
     if (!data?.id) throw new AppError("Something went wrong while saving the session.");
     revalidateCupping();
@@ -219,13 +228,22 @@ export async function saveCoffee(id: string | null, input: unknown): Promise<Act
   if (!parsed.success) return { ok: false, message: "Please check the coffee details.", fieldErrors: zodFieldErrors(parsed.error) };
   try {
     const supabase = getServiceClient();
+    const values = parsed.data;
+    async function writeCoffee(payload: Record<string, unknown>) {
+      if (id) return supabase.from("coffee_lots").update(payload).eq("id", id).select("id").maybeSingle();
+      return supabase.from("coffee_lots").insert(payload).select("id").single();
+    }
+    let saved = await writeCoffee(values);
+    if (saved.error && /province|sector|cell|schema cache/i.test(saved.error.message)) {
+      const { province: _province, sector: _sector, cell: _cell, ...rest } = values;
+      saved = await writeCoffee(rest);
+    }
     if (id) {
-      const { error } = await supabase.from("coffee_lots").update(parsed.data).eq("id", id);
-      throwIfError(error, "Something went wrong while saving the coffee.");
+      throwIfError(saved.error, "Something went wrong while saving the coffee.");
       revalidateCupping();
       return { ok: true, data: { id } };
     }
-    const { data, error } = await supabase.from("coffee_lots").insert(parsed.data).select("id").single();
+    const { data, error } = saved;
     throwIfError(error, "Something went wrong while saving the coffee.");
     if (!data?.id) throw new AppError("Something went wrong while saving the coffee.");
     revalidateCupping();

@@ -13,7 +13,7 @@ import type { z } from "zod";
 
 type FormValues = z.input<typeof participantSchema>;
 
-export function ParticipantForm({ slug }: { slug: string }) {
+export function ParticipantForm({ slug, formType }: { slug: string; formType?: string }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<FormValues>({
@@ -24,7 +24,7 @@ export function ParticipantForm({ slug }: { slug: string }) {
 
   async function onSubmit(values: FormValues) {
     setFormError(null);
-    const result = await startCupping(slug, values);
+    const result = await startCupping(slug, { ...values, formType });
     if (!result.ok) {
       if (result.fieldErrors) {
         for (const [key, message] of Object.entries(result.fieldErrors)) {

@@ -6,6 +6,7 @@ export function CommentsField({
   placeholder,
   value,
   onChange,
+  onFocus,
 }: {
   id: string;
   label: string;
@@ -13,6 +14,7 @@ export function CommentsField({
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  onFocus?: () => void;
 }) {
   return (
     <div>
@@ -31,6 +33,7 @@ export function CommentsField({
         rows={1}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
+        onFocus={onFocus}
         className="cupping-note mt-1 min-h-9 w-full resize-none rounded-lg border border-line bg-foam px-3 py-1.5 text-ink outline-none transition-[border-color,box-shadow] hover:border-ink-mute focus:border-ink focus:ring-4 focus:ring-ink/8 sm:mt-1.5 sm:min-h-11 sm:py-2"
       />
     </div>

@@ -119,7 +119,7 @@ export function HorizontalBars({
   format = (value: number) => value.toLocaleString("en-US"),
   max,
 }: {
-  rows: Array<{ label: string; value: number; hint?: string; color?: string }>;
+  rows: Array<{ label: string; value: number; hint?: string; color?: string; href?: string }>;
   color?: string;
   format?: (value: number) => string;
   max?: number;
@@ -132,7 +132,13 @@ export function HorizontalBars({
         <li key={row.label}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="min-w-0">
-              <span className="block truncate text-ink">{row.label}</span>
+              {row.href ? (
+                <a href={row.href} className="block truncate font-medium text-ink hover:underline">
+                  {row.label}
+                </a>
+              ) : (
+                <span className="block truncate text-ink">{row.label}</span>
+              )}
               {row.hint ? <span className="block truncate text-xs text-ink-mute">{row.hint}</span> : null}
             </span>
             <span className="shrink-0 font-medium text-ink tabular">{format(row.value)}</span>

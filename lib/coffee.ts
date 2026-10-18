@@ -3,7 +3,10 @@ export type CoffeeFields = {
   lot_number?: string | null;
   cupping_code?: string | null;
   washing_station?: string | null;
+  province?: string | null;
   district?: string | null;
+  sector?: string | null;
+  cell?: string | null;
   country?: string | null;
   variety?: string | null;
   process?: string | null;
@@ -19,7 +22,10 @@ const FIELD_DEFS = [
   ["cupping_code", "Cupping Code"],
   ["lot_number", "Lot Number"],
   ["washing_station", "Washing Station"],
+  ["province", "Province"],
   ["district", "District"],
+  ["sector", "Sector"],
+  ["cell", "Cell"],
   ["country", "Country"],
   ["variety", "Variety"],
   ["process", "Process"],

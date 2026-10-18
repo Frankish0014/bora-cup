@@ -54,25 +54,16 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 `NEXT_PUBLIC_APP_URL` is the origin encoded in QR codes. Use the production URL when you deploy.
 
-Optional seed credentials, used only by `npm run seed`:
-
-```env
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-```
-
 ## Supabase setup
 
 1. Create a Supabase project.
 2. Open the SQL editor and run `supabase/migrations/20260926120000_init.sql`.
 3. Copy the project URL, anon key, and service role key into `.env.local`.
-4. For an empty local database only, load sample lots with either:
-   - `ALLOW_SAMPLE_SEED=true npm run seed`, or
-   - the SQL editor and `supabase/seed.sql` (generate it with `npm run seed:sql` if you change the sample catalog).
+4. Add events, sessions, and coffee lots in Admin. There is no sample catalog in this repository.
 
-Do not run the seed against the live cupping database. The live lots reuse the same row IDs, so a seed would overwrite real names and stations.
+Do not insert sample lots, fake participants, or fake evaluations into the live cupping database.
 
-To create an administrator without the seed script:
+To create an administrator:
 
 1. In Supabase Authentication, add a user and confirm the email.
 2. Run:
@@ -116,8 +107,8 @@ Deploy on Vercel.
 
 1. Import the repository.
 2. Add the same environment variables. Set `NEXT_PUBLIC_APP_URL` to the production origin, including `https://`.
-3. Run the migration and seed in the production Supabase project.
-4. Create an administrator with a real password.
+3. Run the migration in the production Supabase project if it is not already applied.
+4. Create an administrator with a real password. Keep the live lots and cupper scores as they are.
 
 The service role key stays in server environment variables. Do not prefix it with `NEXT_PUBLIC_`.
 
@@ -138,4 +129,3 @@ The service role key stays in server environment variables. Do not prefix it wit
 - `app/api/qr` and `app/api/export` — QR images and CSV export
 - `lib/actions` — validated server writes
 - `supabase/migrations` — schema and Row Level Security
-- `database/demo-data.ts` — sample catalog for empty local databases

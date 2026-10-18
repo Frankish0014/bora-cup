@@ -25,6 +25,8 @@ export type SessionRecord = {
   slug: string;
   description: string | null;
   photo_url: string | null;
+  form_policy?: "locked" | "choice";
+  form_type?: "bora" | "sca_traditional" | "sca_cva" | "coe" | "roastery";
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -37,7 +39,10 @@ export type CoffeeLot = {
   lot_number: string | null;
   cupping_code: string | null;
   washing_station: string | null;
+  province: string | null;
   district: string | null;
+  sector: string | null;
+  cell: string | null;
   country: string | null;
   variety: string | null;
   process: string | null;
@@ -71,6 +76,7 @@ export type ParticipantSession = {
   completed_at: string | null;
   status: "in_progress" | "completed";
   resume_token: string;
+  form_type?: "bora" | "sca_traditional" | "sca_cva" | "coe" | "roastery";
 };
 
 export type EvaluationRecord = {

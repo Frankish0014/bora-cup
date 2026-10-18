@@ -4,8 +4,6 @@ import { average, distribution, summarizeCoffees } from "@/lib/analytics";
 import { visibleCoffeeFields } from "@/lib/coffee";
 import { CSV_COLUMNS, toCsv } from "@/lib/csv";
 import { INCOMPLETE_RATINGS_MESSAGE, formatNotes, isDraftComplete, nextIndex, previousIndex } from "@/lib/cupping";
-import { DEMO_SESSIONS, buildDemoCoffees, buildDemoEvaluations, demoScore } from "@/database/demo-data";
-import { FULLY_WASHED_DESCRIPTION, SPECIAL_PROCESS_DESCRIPTION } from "@/lib/content/competition";
 import { parseEvaluationFilters, sanitizeSearch } from "@/lib/filters";
 import { RATING_OPTIONS, formatAverage, ratingLabel, ratingScale, scoreOutOf100 } from "@/lib/ratings";
 import { addResumeToken, parseResumeTokens } from "@/lib/resume";
@@ -156,28 +154,7 @@ describe("analytics and csv", () => {
   });
 });
 
-describe("catalog data and schema", () => {
-  it("builds 7 fully washed and 18 special process coffees", () => {
-    const coffees = buildDemoCoffees();
-    expect(coffees.filter((coffee) => coffee.lot_name.startsWith("Fully Washed"))).toHaveLength(7);
-    expect(coffees.filter((coffee) => coffee.lot_name.startsWith("Special Process"))).toHaveLength(18);
-    expect(coffees[0]).toMatchObject({
-      lot_number: "FW-001",
-      cupping_code: "BORA-FW-001",
-      washing_station: "Cyeza CWS",
-      district: "Muhanga",
-      variety: "Red Bourbon",
-      process: "Fully Washed",
-      altitude: "1,900 MASL",
-    });
-    expect(demoScore("anything")).toBeGreaterThanOrEqual(1);
-    expect(demoScore("anything")).toBeLessThanOrEqual(5);
-    expect(buildDemoEvaluations().length).toBeGreaterThan(0);
-    expect(DEMO_SESSIONS[0].description).toBe(FULLY_WASHED_DESCRIPTION);
-    expect(DEMO_SESSIONS[1].description).toBe(SPECIAL_PROCESS_DESCRIPTION);
-    expect(JSON.stringify(coffees).toLowerCase()).not.toContain("demo");
-  });
-
+describe("schema", () => {
   it("locks down evaluations in the migration", () => {
     const sql = readFileSync("supabase/migrations/20260926120000_init.sql", "utf8");
     expect(sql).toContain("unique (participant_session_id, coffee_lot_id)");

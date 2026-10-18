@@ -9,10 +9,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Best of Rwanda Digital Cupping",
-    template: "%s · Best of Rwanda",
+    default: "Bora Cup",
+    template: "%s · Bora Cup",
   },
-  description: "Taste and score coffees for Best of Rwanda, the national competition and auction organized by NAEB with CEPAR.",
+  description: "Digital cupping sheets for coffee events. Each event keeps its own sessions, lots, and scores.",
 };
 
 export const viewport: Viewport = {

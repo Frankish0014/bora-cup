@@ -30,10 +30,14 @@ export default async function ParticipantDetailPage({ params }: { params: Promis
               {run.status === "completed" ? (
                 <span className="flex items-center gap-2 text-sm text-ink-soft">
                   <Badge tone="leaf">Completed</Badge>
+                  <span className="tabular">{run.progress}</span>
                   <span className="tabular">{formatDateTime(run.completed_at)}</span>
                 </span>
               ) : (
-                <Badge>In progress</Badge>
+                <span className="flex items-center gap-2 text-sm text-ink-soft">
+                  <Badge>In progress</Badge>
+                  <span>{run.progress}</span>
+                </span>
               )}
             </li>
           ))}

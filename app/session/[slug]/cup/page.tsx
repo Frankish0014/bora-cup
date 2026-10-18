@@ -2,6 +2,7 @@ import { CuppingExperience } from "@/components/cupping/CuppingExperience";
 import { StatusScreen } from "@/components/shared/StatusScreen";
 import { findRunForSlug, getCoffeesForSession, getEvaluationsForRun, getSessionBySlug } from "@/lib/data/cupping";
 import { ConfigError } from "@/lib/errors";
+import { isFormType } from "@/lib/forms";
 import { isSlug } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
@@ -11,12 +12,10 @@ async function loadCup(slug: string) {
   try {
     const session = await getSessionBySlug(slug);
     if (!session) return { status: "missing" as const };
-    if (!session.active) return { status: "inactive" as const };
     const coffees = await getCoffeesForSession(session.id, true);
     if (coffees.length === 0) return { status: "empty" as const };
     const run = await findRunForSlug(slug);
-    if (!run) return { status: "start" as const };
-    if (run.status === "completed") return { status: "done" as const };
+    if (!run) return session.active ? { status: "start" as const } : { status: "inactive" as const };
     const evaluations = await getEvaluationsForRun(run.id);
     return { status: "ready" as const, session, coffees, run, evaluations };
   } catch (error) {
@@ -44,13 +43,15 @@ export default async function CupPage({ params }: { params: Promise<{ slug: stri
   if (loaded.status === "empty") {
     return <StatusScreen title="No coffees yet" message="No coffees are available in this session yet." />;
   }
-  if (loaded.status === "start") redirect(`/session/${slug}?notice=start`);
-  if (loaded.status === "done") redirect(`/session/${slug}/complete`);
+  if (loaded.status === "start") return redirect(`/session/${slug}?notice=start`);
 
+  const formType = isFormType(loaded.run.form_type) ? loaded.run.form_type : isFormType(loaded.session.form_type) ? loaded.session.form_type : "bora";
   return (
     <CuppingExperience
       slug={slug}
       sessionName={loaded.session.name}
+      eventName={loaded.session.event?.name ?? loaded.session.name}
+      formType={formType}
       participantSessionId={loaded.run.id}
       coffees={loaded.coffees}
       evaluations={loaded.evaluations}

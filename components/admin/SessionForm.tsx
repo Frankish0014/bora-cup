@@ -2,6 +2,7 @@
 
 import { FormActions, FormSection } from "@/components/admin/FormSection";
 import { saveSession, uploadSessionPhoto } from "@/lib/actions/admin";
+import { FORM_TYPES } from "@/lib/forms";
 import { sessionSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
 import { Alert, Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -21,7 +22,17 @@ export function SessionForm({
 }: {
   id?: string;
   events: Array<{ id: string; name: string }>;
-  defaults?: { event_id: string; name: string; category: string; slug: string; description: string | null; active: boolean; photo_url?: string | null };
+  defaults?: {
+    event_id: string;
+    name: string;
+    category: string;
+    slug: string;
+    description: string | null;
+    active: boolean;
+    photo_url?: string | null;
+    form_policy?: "locked" | "choice";
+    form_type?: string;
+  };
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
@@ -38,6 +49,8 @@ export function SessionForm({
       slug: defaults?.slug ?? "",
       description: defaults?.description ?? "",
       active: defaults?.active ?? true,
+      form_policy: defaults?.form_policy ?? "locked",
+      form_type: FORM_TYPES.find((item) => item.id === defaults?.form_type)?.id ?? "bora",
     },
   });
   const errors = form.formState.errors;
@@ -132,6 +145,23 @@ export function SessionForm({
         <p className="text-xs text-ink-soft">
           Participants will open <code className="rounded-md bg-paper-2 px-1.5 py-0.5 font-mono text-[11px] text-ink">/session/{slug || "…"}</code>
         </p>
+      </FormSection>
+      <FormSection title="Cupping form" description="Lock one international scoresheet, or let each cupper choose when they enter.">
+        <Field label="Form policy" error={errors.form_policy?.message}>
+          <Select {...form.register("form_policy")}>
+            <option value="locked">One mandatory form for this session</option>
+            <option value="choice">Cuppers choose their form</option>
+          </Select>
+        </Field>
+        <Field label="Form" hint="Used for everyone when the form is locked. Used as the default when cuppers can choose." error={errors.form_type?.message}>
+          <Select {...form.register("form_type")}>
+            {FORM_TYPES.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
       </FormSection>
       <FormSection title="Visibility" description="Inactive sessions show a “closed” message when scanned.">
         <Controller

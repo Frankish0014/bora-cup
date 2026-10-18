@@ -20,17 +20,19 @@ export function Brand({
   tone = "dark",
   compact = false,
   className,
+  name = "Bora Cup",
 }: {
   tone?: "dark" | "light";
   compact?: boolean;
   className?: string;
+  name?: string;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BrandMark tone={tone} />
       <span className={cn("text-[15px] font-semibold tracking-tight", tone === "light" ? "text-white" : "text-ink")}>
-        Best of Rwanda
-        {compact ? null : <span className={cn("font-normal", tone === "light" ? "text-white/70" : "text-ink-mute")}> · Cup Tour</span>}
+        {name}
+        {compact ? null : <span className={cn("font-normal", tone === "light" ? "text-white/70" : "text-ink-mute")}> · cupping</span>}
       </span>
     </span>
   );

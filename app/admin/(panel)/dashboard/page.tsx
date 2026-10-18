@@ -1,16 +1,20 @@
 import { ChartCard, ChartEmpty, DonutChart, HorizontalBars, Kpi, RATING_COLORS, SERIES_COLORS, VerticalBars } from "@/components/admin/charts";
+import { FilterBar, FilterSelect } from "@/components/admin/FilterBar";
 import { PageHeader, SectionAction, SectionTitle } from "@/components/admin/PageHeader";
 import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { average, countBy, distribution } from "@/lib/analytics";
-import { getDashboardStats, type DashboardEvaluation } from "@/lib/data/admin";
+import { getDashboardStats, getEvents, type DashboardEvaluation } from "@/lib/data/admin";
+import { filtersToQuery, parseEvaluationFilters } from "@/lib/filters";
 import { RATING_OPTIONS, formatAverage, scoreOutOf100 } from "@/lib/ratings";
+import { RWANDA_PROVINCES, allRwandaDistricts, resolveProvince } from "@/lib/rwanda";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const filters = parseEvaluationFilters(await searchParams);
+  const [stats, events] = await Promise.all([getDashboardStats(filters), getEvents()]);
   const { evaluations } = stats;
   const activeCoffees = stats.coffees.filter((coffee) => coffee.active);
   const openSessions = stats.sessions.filter((session) => session.active);
@@ -20,8 +24,8 @@ export default async function DashboardPage() {
     return (
       <div>
         <PageHeader
-          title="Best of Rwanda Cup Tour"
-          description="The table is ready for official cupping. Scores will appear here as cuppers save."
+          title="Cupping dashboard"
+          description="The table is ready. Scores appear here as cuppers save, even before they tap submit."
           action={
             <>
               <Link href="/admin/qr-codes" className={buttonClasses("secondary", buttonSm)}>
@@ -35,7 +39,7 @@ export default async function DashboardPage() {
         />
         <div className="card p-5 sm:p-7">
           <p className="text-[15px] font-semibold text-ink">No ratings yet</p>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-ink-soft">Practice and demo cuppings have been cleared. Open sessions stay available for international cuppers.</p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-ink-soft">Scores will appear here as official cuppers save. Open sessions stay available for the table.</p>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {openSessions.map((session) => {
               const lots = activeCoffees.filter((coffee) => coffee.session_id === session.id).length;
@@ -79,12 +83,29 @@ export default async function DashboardPage() {
 
   const processes = groupTail(countBy(activeCoffees.map((coffee) => coffee.process?.trim() || "Not specified")), 5);
   const timeline = bucketByTime(evaluations);
+  const lotById = new Map(stats.coffees.map((coffee) => [coffee.id, coffee]));
+  const byRegion = new Map<string, number[]>();
+  for (const row of evaluations) {
+    const lot = lotById.get(row.coffee_lot_id);
+    const region = resolveProvince(lot ?? {}) ?? lot?.district?.trim() ?? "Origin not set";
+    const list = byRegion.get(region) ?? [];
+    list.push(row.overall_score);
+    byRegion.set(region, list);
+  }
+  const regionRows = [...byRegion.entries()]
+    .map(([label, scores]) => ({
+      label,
+      value: scoreOutOf100(average(scores) ?? 0) ?? 0,
+      hint: `${scores.length} ${scores.length === 1 ? "score" : "scores"}`,
+      href: `/admin/dashboard${filtersToQuery(filters, { province: RWANDA_PROVINCES.includes(label as (typeof RWANDA_PROVINCES)[number]) ? label : filters.province, district: RWANDA_PROVINCES.includes(label as (typeof RWANDA_PROVINCES)[number]) ? undefined : label, page: 1 })}`,
+    }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <div>
       <PageHeader
-        title="Best of Rwanda Cup Tour"
-        description="Live picture of the single rating and the aroma, flavor, and overall notes."
+        title="Cupping dashboard"
+        description="All saved cupping feedback across events. Filter by event, cupper country, or Rwanda origin."
         action={
           <>
             <Link href="/admin/qr-codes" className={buttonClasses("secondary", buttonSm)}>
@@ -99,6 +120,22 @@ export default async function DashboardPage() {
           </>
         }
       />
+
+      <div className="mb-4">
+        <FilterBar resetHref="/admin/dashboard" columns={4}>
+          <FilterSelect name="event" label="Event" defaultValue={filters.eventId} options={events.map((event) => ({ value: event.id, label: event.name }))} />
+          <FilterSelect name="country" label="Cupper country" defaultValue={filters.country} options={[...new Set(stats.countries)].sort().map((country) => ({ value: country, label: country }))} />
+          <FilterSelect name="province" label="Lot province" defaultValue={filters.province} options={RWANDA_PROVINCES.map((province) => ({ value: province, label: province }))} />
+          <FilterSelect
+            name="district"
+            label="Lot district"
+            defaultValue={filters.district}
+            options={allRwandaDistricts()
+              .filter((row) => !filters.province || row.province === filters.province)
+              .map((row) => ({ value: row.district, label: `${row.district} · ${row.province}` }))}
+          />
+        </FilterBar>
+      </div>
 
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Kpi label="Participants" value={stats.participants.toLocaleString("en-US")} hint={`${countries.length} ${countries.length === 1 ? "country" : "countries"}`} accent />
@@ -196,11 +233,46 @@ export default async function DashboardPage() {
           }
         >
           <HorizontalBars
-            rows={topCoffees.map((coffee) => ({ label: coffee.label, hint: `${coffee.count} ${coffee.count === 1 ? "score" : "scores"}`, value: scoreOutOf100(coffee.value) ?? 0 }))}
+            rows={topCoffees.map((coffee) => ({
+              label: coffee.label,
+              hint: `${coffee.count} ${coffee.count === 1 ? "score" : "scores"}`,
+              value: scoreOutOf100(coffee.value) ?? 0,
+              href: `/admin/analytics/${coffee.id}`,
+            }))}
             max={100}
             format={(value) => value.toFixed(1)}
             color={SERIES_COLORS[1]}
           />
+        </ChartCard>
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <ChartCard title="Loved origins in Rwanda" description="Click a province or district to see the lots behind it. Empty origin fields stay hidden.">
+          {regionRows.length === 0 ? <ChartEmpty /> : <HorizontalBars rows={regionRows} max={100} format={(value) => value.toFixed(1)} />}
+        </ChartCard>
+        <ChartCard title="Lots in this view" description="Notes already saved, including sheets that were never submitted.">
+          {topCoffees.length === 0 ? (
+            <ChartEmpty />
+          ) : (
+            <ul className="space-y-3">
+              {topCoffees.slice(0, 6).map((coffee) => {
+                const notes = evaluations.find((row) => row.coffee_lot_id === coffee.id && (row.aroma_note || row.flavor_note || row.overall_note));
+                return (
+                  <li key={coffee.id}>
+                    <Link href={`/admin/analytics/${coffee.id}`} className="block rounded-xl border border-line px-3 py-2 hover:bg-paper">
+                      <p className="text-sm font-medium text-ink">{coffee.label}</p>
+                      <p className="text-xs text-ink-mute tabular">{formatAverage(coffee.value)} avg · {coffee.count} scores</p>
+                      {notes ? (
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-soft">
+                          {[notes.aroma_note, notes.flavor_note, notes.overall_note].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </ChartCard>
       </div>
 
@@ -212,6 +284,7 @@ export default async function DashboardPage() {
               <span className="min-w-0">
                 <span className="font-medium text-ink">{participant.name}</span>
                 <span className="ml-2 text-ink-mute">{participant.country}</span>
+                <span className="mt-0.5 block text-xs text-ink-mute">{participant.progress}</span>
               </span>
               <span className="flex shrink-0 items-center gap-3">
                 <span className="hidden text-xs text-ink-mute tabular sm:inline">{formatDateTime(participant.created_at)}</span>

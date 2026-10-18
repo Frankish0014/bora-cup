@@ -1,4 +1,3 @@
-import { CompetitionNote } from "@/components/shared/CompetitionNote";
 import { Brand } from "@/components/ui/brand";
 import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { COMPETITION_STATS } from "@/lib/content/competition";
@@ -19,7 +18,13 @@ export default async function HomePage() {
       unavailable = true;
     }
   }
-  const eventName = sessions.find((session) => session.eventName)?.eventName ?? "Best of Rwanda Cup Tour";
+  const grouped = new Map<string, typeof sessions>();
+  for (const session of sessions) {
+    const eventName = session.eventName?.trim() || "Cupping event";
+    const list = grouped.get(eventName) ?? [];
+    list.push(session);
+    grouped.set(eventName, list);
+  }
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-6xl px-3 py-4 sm:px-5 sm:py-6">
@@ -33,12 +38,11 @@ export default async function HomePage() {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
         <section className="card grid grid-cols-[minmax(0,1.12fr)_minmax(8.75rem,0.88fr)] items-stretch overflow-hidden bg-leaf text-white sm:grid-cols-[minmax(0,1.2fr)_minmax(13rem,0.9fr)] lg:col-span-2">
           <div className="flex min-w-0 flex-col justify-between p-6 sm:p-8">
-            <p className="text-sm font-medium text-white/80">{eventName}</p>
+            <p className="text-sm font-medium text-white/80">Digital cupping</p>
             <div className="mt-8">
-              <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl">Digital cupping</h1>
-              <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Scroll through the coffees, write your notes, and save the session once. No account needed.</p>
+              <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl">Open a table</h1>
+              <p className="mt-4 max-w-sm text-[15px] leading-7 text-white/80">Each event keeps its own coffees, scores, and descriptions. Scan the QR code for your session.</p>
             </div>
-            <p className="mt-8 text-sm text-white/70">At the table, scan the QR code for your session.</p>
           </div>
           <div className="relative min-h-full">
             <img src="/photos/cup.jpg" alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-[center_62%]" />
@@ -53,31 +57,38 @@ export default async function HomePage() {
             {sessions.length > 0 ? <span className="text-xs text-ink-mute tabular">{sessions.length}</span> : null}
           </div>
           {sessions.length > 0 ? (
-            <ul className="grid grid-cols-1 gap-3">
-              {sessions.map((session) => {
-                const photo = session.photoUrl?.trim();
-                return (
-                <li key={session.id} className={photo ? "card grid grid-cols-[minmax(0,1fr)_7.25rem] items-stretch overflow-hidden sm:grid-cols-[minmax(0,1fr)_9rem]" : "card flex items-center justify-between gap-3 p-4"}>
-                  <span className={photo ? "flex min-w-0 items-center justify-between gap-3 p-4" : "flex min-w-0 flex-1 items-center justify-between gap-3"}>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-semibold text-ink">{session.name}</span>
-                      <span className="mt-0.5 block text-sm text-ink-soft">
-                        {session.category} · {session.coffeeCount} {session.coffeeCount === 1 ? "coffee" : "coffees"}
-                      </span>
-                    </span>
-                    <Link href={`/session/${session.slug}`} className={buttonClasses("primary", `${buttonSm} shrink-0`)}>
-                      Open
-                    </Link>
-                  </span>
-                  {photo ? (
-                    <span className="relative min-h-full">
-                      <img src={photo} alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-center" />
-                    </span>
-                  ) : null}
-                </li>
-                );
-              })}
-            </ul>
+            <div className="space-y-6">
+              {[...grouped.entries()].map(([eventName, eventSessions]) => (
+                <div key={eventName}>
+                  <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-ink-mute">{eventName}</p>
+                  <ul className="grid grid-cols-1 gap-3">
+                    {eventSessions.map((session) => {
+                      const photo = session.photoUrl?.trim();
+                      return (
+                        <li key={session.id} className={photo ? "card grid grid-cols-[minmax(0,1fr)_7.25rem] items-stretch overflow-hidden sm:grid-cols-[minmax(0,1fr)_9rem]" : "card flex items-center justify-between gap-3 p-4"}>
+                          <span className={photo ? "flex min-w-0 items-center justify-between gap-3 p-4" : "flex min-w-0 flex-1 items-center justify-between gap-3"}>
+                            <span className="min-w-0">
+                              <span className="block truncate text-[15px] font-semibold text-ink">{session.name}</span>
+                              <span className="mt-0.5 block text-sm text-ink-soft">
+                                {session.category} · {session.coffeeCount} {session.coffeeCount === 1 ? "coffee" : "coffees"}
+                              </span>
+                            </span>
+                            <Link href={`/session/${session.slug}`} className={buttonClasses("primary", `${buttonSm} shrink-0`)}>
+                              Open
+                            </Link>
+                          </span>
+                          {photo ? (
+                            <span className="relative min-h-full">
+                              <img src={photo} alt="" className="photo-fade absolute inset-0 h-full w-full object-cover object-center" />
+                            </span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="card px-6 py-10 text-center">
               <p className="text-[15px] leading-7 text-ink-soft">
@@ -101,11 +112,9 @@ export default async function HomePage() {
         ))}
       </dl>
 
-      <CompetitionNote />
-
       <footer className="px-1 pt-10 text-xs leading-5 text-ink-mute">
-        Organized by NAEB in partnership with CEPAR.
-        <span className="mt-1 block">This cupping app records feedback. It is not the public auction.</span>
+        Bora Cup records cupping feedback for the events that use it.
+        <span className="mt-1 block">Each event only shows its own sessions, lots, and scores.</span>
       </footer>
     </main>
   );

@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { isCountry } from "@/lib/countries";
 import { COMMENT_MAX_LENGTH } from "@/lib/cupping";
+import { FORM_TYPE_IDS } from "@/lib/forms";
 import { isSlug } from "@/lib/utils";
+
+const formTypeSchema = z.enum(FORM_TYPE_IDS);
 
 const optionalText = (max: number) =>
   z.preprocess(
@@ -40,6 +43,10 @@ export const participantSchema = z.object({
   role: optionalText(120),
 });
 
+export const startCuppingSchema = participantSchema.extend({
+  formType: formTypeSchema.optional(),
+});
+
 const optionalNote = optionalText(COMMENT_MAX_LENGTH);
 
 const cuppingNotesSchema = z.object({
@@ -48,12 +55,17 @@ const cuppingNotesSchema = z.object({
   aroma: optionalNote,
   flavor: optionalNote,
   overall: optionalNote,
+  totalScore: z.number().min(0).max(100).nullable().optional(),
+  formType: formTypeSchema.optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const sessionSubmissionSchema = z.object({
   participantSessionId: z.string().uuid(),
   evaluations: z.array(cuppingNotesSchema).min(1),
 });
+
+export const evaluationSyncSchema = sessionSubmissionSchema;
 
 export const evaluationSchema = z.object({
   participantSessionId: z.string().uuid(),
@@ -89,6 +101,8 @@ export const sessionSchema = z.object({
     .refine(isSlug, "Use lowercase letters, numbers, and hyphens."),
   description: optionalText(2000),
   active: z.boolean(),
+  form_policy: z.enum(["locked", "choice"]).default("locked"),
+  form_type: formTypeSchema.default("bora"),
 });
 
 export const coffeeSchema = z.object({
@@ -97,7 +111,10 @@ export const coffeeSchema = z.object({
   lot_number: optionalText(80),
   cupping_code: optionalText(80),
   washing_station: optionalText(160),
+  province: optionalText(80),
   district: optionalText(120),
+  sector: optionalText(120),
+  cell: optionalText(120),
   country: optionalText(80),
   variety: optionalText(120),
   process: optionalText(120),

@@ -23,6 +23,10 @@ export async function getSessionBySlug(slug: string) {
     slug: data.slug as string,
     description: (data.description as string | null) ?? null,
     photo_url: (data.photo_url as string | null) ?? null,
+    form_policy: data.form_policy === "choice" ? "choice" : "locked",
+    form_type: (["bora", "sca_traditional", "sca_cva", "coe", "roastery"] as const).includes(data.form_type as never)
+      ? (data.form_type as SessionRecord["form_type"])
+      : "bora",
     active: Boolean(data.active),
     created_at: data.created_at as string,
     updated_at: data.updated_at as string,
@@ -100,25 +104,27 @@ export async function findRunForSlug(slug: string) {
   const tokens = await readResumeTokens();
   if (tokens.length === 0) return null;
   const supabase = getServiceClient();
-  const { data, error } = await supabase
-    .from("participant_sessions")
-    .select("id, participant_id, session_id, started_at, completed_at, status, resume_token, sessions!inner(slug)")
-    .in("resume_token", tokens)
-    .eq("sessions.slug", slug)
-    .order("started_at", { ascending: false });
-  throwIfError(error, "Something went wrong while loading your cupping.");
-  const rows = (data ?? []) as unknown as ParticipantSession[];
+  const withForm = "id, participant_id, session_id, started_at, completed_at, status, resume_token, form_type, sessions!inner(slug)";
+  const withoutForm = "id, participant_id, session_id, started_at, completed_at, status, resume_token, sessions!inner(slug)";
+  const first = await supabase.from("participant_sessions").select(withForm).in("resume_token", tokens).eq("sessions.slug", slug).order("started_at", { ascending: false });
+  const usedFallback = Boolean(first.error && /form_type|schema cache/i.test(first.error.message));
+  const result = usedFallback
+    ? await supabase.from("participant_sessions").select(withoutForm).in("resume_token", tokens).eq("sessions.slug", slug).order("started_at", { ascending: false })
+    : first;
+  throwIfError(result.error, "Something went wrong while loading your cupping.");
+  const rows = (result.data ?? []) as unknown as ParticipantSession[];
   return rows.find((row) => row.status === "in_progress") ?? rows[0] ?? null;
 }
 
 export async function getEvaluationsForRun(participantSessionId: string) {
   const supabase = getServiceClient();
-  const { data, error } = await supabase
-    .from("evaluations")
-    .select("coffee_lot_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note")
-    .eq("participant_session_id", participantSessionId);
-  throwIfError(error, "Something went wrong while loading your evaluations.");
-  return (data ?? []) as Array<{
+  const withForm = "coffee_lot_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, form_payload, total_score";
+  const withoutForm = "coffee_lot_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note";
+  const first = await supabase.from("evaluations").select(withForm).eq("participant_session_id", participantSessionId);
+  const usedFallback = Boolean(first.error && /form_payload|total_score|schema cache/i.test(first.error.message));
+  const result = usedFallback ? await supabase.from("evaluations").select(withoutForm).eq("participant_session_id", participantSessionId) : first;
+  throwIfError(result.error, "Something went wrong while loading your evaluations.");
+  return (result.data ?? []) as Array<{
     coffee_lot_id: string;
     aroma_score: number;
     flavor_score: number;
@@ -126,5 +132,7 @@ export async function getEvaluationsForRun(participantSessionId: string) {
     aroma_note: string | null;
     flavor_note: string | null;
     overall_note: string | null;
+    form_payload?: Record<string, unknown> | null;
+    total_score?: number | null;
   }>;
 }

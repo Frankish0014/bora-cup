@@ -3,6 +3,10 @@ export type EvaluationFilters = {
   sessionId?: string;
   coffeeId?: string;
   country?: string;
+  province?: string;
+  district?: string;
+  sector?: string;
+  cell?: string;
   participant?: string;
   from?: string;
   to?: string;
@@ -25,6 +29,10 @@ export function parseEvaluationFilters(input: Record<string, string | string[] |
   const sessionId = first(input.session);
   const coffeeId = first(input.coffee);
   const country = first(input.country)?.trim();
+  const province = first(input.province)?.trim();
+  const district = first(input.district)?.trim();
+  const sector = first(input.sector)?.trim();
+  const cell = first(input.cell)?.trim();
   const participant = sanitizeSearch(first(input.participant) ?? "");
   const from = first(input.from);
   const to = first(input.to);
@@ -35,6 +43,10 @@ export function parseEvaluationFilters(input: Record<string, string | string[] |
     sessionId: sessionId && UUID.test(sessionId) ? sessionId : undefined,
     coffeeId: coffeeId && UUID.test(coffeeId) ? coffeeId : undefined,
     country: country ? country.slice(0, 80) : undefined,
+    province: province ? province.slice(0, 80) : undefined,
+    district: district ? district.slice(0, 80) : undefined,
+    sector: sector ? sector.slice(0, 80) : undefined,
+    cell: cell ? cell.slice(0, 80) : undefined,
     participant: participant || undefined,
     from: from && DATE.test(from) ? from : undefined,
     to: to && DATE.test(to) ? to : undefined,
@@ -49,6 +61,10 @@ export function filtersToQuery(filters: EvaluationFilters, overrides: Partial<Ev
   if (next.sessionId) params.set("session", next.sessionId);
   if (next.coffeeId) params.set("coffee", next.coffeeId);
   if (next.country) params.set("country", next.country);
+  if (next.province) params.set("province", next.province);
+  if (next.district) params.set("district", next.district);
+  if (next.sector) params.set("sector", next.sector);
+  if (next.cell) params.set("cell", next.cell);
   if (next.participant) params.set("participant", next.participant);
   if (next.from) params.set("from", next.from);
   if (next.to) params.set("to", next.to);

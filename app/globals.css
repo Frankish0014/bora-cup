@@ -157,6 +157,10 @@ input[type="date"] {
   background: #d7f0e2;
 }
 
+.cupping-save {
+  bottom: var(--keyboard-inset, 0px);
+}
+
 .photo-fade {
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 22%);
   mask-image: linear-gradient(to right, transparent 0%, black 22%);

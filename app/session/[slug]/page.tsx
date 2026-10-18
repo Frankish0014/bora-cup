@@ -1,8 +1,9 @@
 import { SessionEntry } from "@/components/participant/SessionEntry";
 import { StatusScreen } from "@/components/shared/StatusScreen";
-import { getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
+import { findRunForSlug, getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
 import { ConfigError } from "@/lib/errors";
 import { isSlug } from "@/lib/utils";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,11 @@ async function loadSession(slug: string) {
   try {
     const session = await getSessionBySlug(slug);
     if (!session) return { status: "missing" as const };
-    if (!session.active) return { status: "inactive" as const };
+    if (!session.active) {
+      const run = await findRunForSlug(slug);
+      if (run) return { status: "resume" as const };
+      return { status: "inactive" as const };
+    }
     const coffees = await getCoffeesForSession(session.id, true);
     return { status: "ready" as const, session, coffeeCount: coffees.length };
   } catch (error) {
@@ -42,12 +47,17 @@ export default async function SessionPage({
   if (loaded.status === "inactive") {
     return <StatusScreen title="Session closed" message="This cupping session is not open right now." />;
   }
+  if (loaded.status === "resume") return redirect(`/session/${slug}/cup`);
   return (
     <SessionEntry
       slug={loaded.session.slug}
       sessionName={loaded.session.name}
       category={loaded.session.category}
       description={loaded.session.description}
+      eventName={loaded.session.event?.name ?? loaded.session.name}
+      eventDescription={loaded.session.event?.description ?? null}
+      formPolicy={loaded.session.form_policy === "choice" ? "choice" : "locked"}
+      formType={loaded.session.form_type ?? "bora"}
       coffeeCount={loaded.coffeeCount}
       notice={query.notice}
     />

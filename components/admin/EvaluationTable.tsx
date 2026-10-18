@@ -40,7 +40,10 @@ export function EvaluationTable({ rows }: { rows: EvaluationView[] }) {
                   <span className="block text-ink">{row.coffee.lot_name}</span>
                   <span className="mt-0.5 block text-xs text-ink-mute">{row.session.name}</span>
                 </TD>
-                <TD className="align-top whitespace-nowrap">{ratingLabel(row.overall_score)}</TD>
+                <TD className="align-top whitespace-nowrap">
+                  {ratingLabel(row.overall_score)}
+                  {row.submitted ? null : <span className="mt-0.5 block text-xs text-ink-mute">In progress</span>}
+                </TD>
                 <TD className="max-w-sm align-top text-ink-soft">
                   <Notes text={formatNotes({ aroma: row.aroma_note, flavor: row.flavor_note, overall: row.overall_note })} />
                 </TD>
@@ -63,7 +66,10 @@ export function EvaluationTable({ rows }: { rows: EvaluationView[] }) {
             <p className="mt-0.5 text-sm text-ink-soft">
               {row.coffee.lot_name} · {row.session.name}
             </p>
-            <p className="mt-3 text-sm font-medium text-ink">{ratingLabel(row.overall_score)}</p>
+            <p className="mt-3 text-sm font-medium text-ink">
+              {ratingLabel(row.overall_score)}
+              {row.submitted ? null : <span className="ml-2 text-xs font-normal text-ink-mute">In progress</span>}
+            </p>
             <Notes text={formatNotes({ aroma: row.aroma_note, flavor: row.flavor_note, overall: row.overall_note })} className="mt-3" />
           </li>
         ))}

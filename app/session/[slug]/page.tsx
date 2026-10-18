@@ -1,6 +1,7 @@
 import { SessionEntry } from "@/components/participant/SessionEntry";
 import { StatusScreen } from "@/components/shared/StatusScreen";
 import { findRunForSlug, getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
+import { isEmailConfigured } from "@/lib/email";
 import { ConfigError } from "@/lib/errors";
 import { isSlug } from "@/lib/utils";
 import { redirect } from "next/navigation";
@@ -60,6 +61,7 @@ export default async function SessionPage({
       formType={loaded.session.form_type ?? "bora"}
       coffeeCount={loaded.coffeeCount}
       notice={query.notice}
+      emailEnabled={isEmailConfigured()}
     />
   );
 }

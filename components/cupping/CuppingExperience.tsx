@@ -2,6 +2,7 @@
 
 import { CoffeeInformationCard } from "@/components/cupping/CoffeeInformationCard";
 import { CuppingProgress } from "@/components/cupping/CuppingProgress";
+import { LeaveTableButton } from "@/components/cupping/LeaveTableButton";
 import { ProtocolFields, formBadge } from "@/components/cupping/ProtocolFields";
 import { SessionHeader } from "@/components/cupping/SessionHeader";
 import { useKeyboardInset } from "@/components/cupping/useKeyboardInset";
@@ -183,6 +184,11 @@ export function CuppingExperience({
       <SessionHeader sessionName={sessionName} eventName={eventName}>
         <div className="mt-1 flex items-center justify-between gap-3">
           <p className="truncate text-[11px] text-ink-mute">{formBadge(formType)}</p>
+          <LeaveTableButton
+            slug={slug}
+            participantSessionId={participantSessionId}
+            hasRatings={coffees.some((coffee) => isDraftComplete(drafts[coffee.id]))}
+          />
         </div>
         <CuppingProgress done={coffees.map((coffee) => isDraftComplete(drafts[coffee.id]))} />
       </SessionHeader>

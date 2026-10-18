@@ -2,9 +2,24 @@
 
 import { StatusBadge } from "@/components/ui/badge";
 import { Button, buttonClasses, buttonSm } from "@/components/ui/button";
+import { CopyLink } from "@/components/ui/CopyLink";
 import { useState } from "react";
 
-export function QRGenerator({ name, slug, url, active }: { name: string; slug: string; url: string; active: boolean }) {
+export function QRGenerator({
+  name,
+  slug,
+  cuppingUrl,
+  reviewUrl,
+  tableUrl,
+  active,
+}: {
+  name: string;
+  slug: string;
+  cuppingUrl: string;
+  reviewUrl: string;
+  tableUrl: string;
+  active: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const image = `/api/qr/${slug}`;
 
@@ -20,7 +35,11 @@ export function QRGenerator({ name, slug, url, active }: { name: string; slug: s
           <h2 className="text-[17px] font-semibold tracking-tight text-ink">{name}</h2>
           <StatusBadge active={active} />
         </div>
-        <p className="mt-2 break-all rounded-lg bg-paper px-3 py-2 font-mono text-xs text-ink-soft">{url}</p>
+        <dl className="mt-4 space-y-3">
+          <ShareRow label="Cupping" hint="QR and table entry" url={cuppingUrl} />
+          <ShareRow label="Review" hint="Notes and scores for this session" url={reviewUrl} />
+          <ShareRow label="Table setup" hint="Cup 1 is the first lot, left to right" url={tableUrl} />
+        </dl>
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-5">
           <a className={buttonClasses("primary", buttonSm)} href={`${image}?download=1`}>
             Download PNG
@@ -32,15 +51,31 @@ export function QRGenerator({ name, slug, url, active }: { name: string; slug: s
             variant="secondary"
             className={buttonSm}
             onClick={async () => {
-              await navigator.clipboard.writeText(url);
+              await navigator.clipboard.writeText(cuppingUrl);
               setCopied(true);
               window.setTimeout(() => setCopied(false), 2000);
             }}
           >
-            {copied ? "Copied" : "Copy link"}
+            {copied ? "Copied" : "Copy cupping link"}
           </Button>
         </div>
       </div>
     </article>
+  );
+}
+
+function ShareRow({ label, hint, url }: { label: string; url: string; hint: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-medium text-ink-mute">{label}</dt>
+      <dd className="mt-1 flex flex-wrap items-center gap-2">
+        <p className="min-w-0 flex-1 truncate rounded-lg bg-paper px-3 py-2 font-mono text-xs text-ink-soft">{url}</p>
+        <CopyLink url={url} label="Copy" className="min-h-9 px-3 text-[13px]" />
+        <a className={buttonClasses("ghost", "min-h-9 px-3 text-[13px]")} href={url} target="_blank" rel="noreferrer">
+          Open
+        </a>
+      </dd>
+      <p className="mt-1 text-xs text-ink-mute">{hint}</p>
+    </div>
   );
 }

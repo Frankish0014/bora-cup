@@ -11,7 +11,7 @@ export function CoffeeInformationCard({ lot, position }: { lot: CoffeeFields & {
   return (
     <div className={photo ? "grid grid-cols-[minmax(0,1.05fr)_minmax(7.5rem,0.9fr)] items-stretch bg-leaf text-white sm:grid-cols-[minmax(0,1.15fr)_minmax(13rem,1fr)]" : "flex items-stretch bg-leaf text-white"}>
       <div className="min-w-0 px-3 py-3 sm:px-4 sm:py-3.5">
-        {position ? <p className="text-[10px] font-medium tracking-wide text-white/65 tabular">Coffee {position}</p> : null}
+        {position ? <p className="text-[10px] font-medium tracking-wide text-white/65 tabular">Cup {position}</p> : null}
         <h2 id={position ? `coffee-title-${position}` : "coffee-title"} tabIndex={-1} className="mt-0.5 text-[15px] font-semibold leading-snug tracking-tight break-words text-white outline-none sm:text-lg">
           {lot.lot_name}
         </h2>

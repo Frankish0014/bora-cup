@@ -143,10 +143,11 @@ describe("analytics and csv", () => {
         Flavor: "Cocoa",
         Overall: 'He said "clean"',
         "Submitted At": "2026-09-20T11:30:00.000Z",
+        Sheet: "Submitted",
       },
     ]);
     expect(csv.startsWith("\uFEFFParticipant Name,Email,Country")).toBe(true);
-    expect(CSV_COLUMNS).toHaveLength(22);
+    expect(CSV_COLUMNS).toHaveLength(23);
     expect(csv).toContain("Score / 100,Rating,Aroma,Flavor,Overall");
     expect(csv).toContain("80,Excellent,Jasmine");
     expect(csv).toContain("'=cmd");

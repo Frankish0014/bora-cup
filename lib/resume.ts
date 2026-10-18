@@ -16,6 +16,12 @@ export function addResumeToken(existing: string | undefined, token: string) {
   return tokens.join(".");
 }
 
+export function removeResumeToken(existing: string | undefined, token: string) {
+  return parseResumeTokens(existing)
+    .filter((item) => item !== token)
+    .join(".");
+}
+
 export const resumeCookieOptions = {
   httpOnly: true,
   sameSite: "lax" as const,

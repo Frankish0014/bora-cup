@@ -176,6 +176,35 @@ input[type="date"] {
   display: none;
 }
 
+.print-break {
+  break-inside: avoid;
+}
+
+@media screen {
+  .no-screen {
+    display: none;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -12,7 +12,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   return (
     <div>
-      <PageHeader title="Analytics" description="Averages out of 100. They describe the feedback; they do not rank a winner." />
+      <PageHeader title="Analytics" description="Averages out of 100 from submitted sheets only. They describe the feedback; they do not rank a winner." />
       <FilterBar resetHref="/admin/analytics" columns={4}>
         <FilterSelect name="event" label="Event" defaultValue={filters.eventId} options={options.events.map((event) => ({ value: event.id, label: event.name }))} />
         <FilterSelect name="session" label="Session" defaultValue={filters.sessionId} options={options.sessions.map((session) => ({ value: session.id, label: session.name }))} />

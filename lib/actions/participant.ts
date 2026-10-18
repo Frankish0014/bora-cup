@@ -3,10 +3,12 @@
 import { cookies } from "next/headers";
 import { INCOMPLETE_RATINGS_MESSAGE, INCOMPLETE_SUBMISSION_MESSAGE, SAVE_FAILED_MESSAGE } from "@/lib/cupping";
 import { getCoffeesForSession, getSessionBySlug } from "@/lib/data/cupping";
+import { sendSessionEmail, type SessionMail } from "@/lib/email";
 import { AppError, friendlyError, throwIfError } from "@/lib/errors";
 import { isFormType, type FormTypeId } from "@/lib/forms";
-import { addResumeToken, parseResumeTokens, RESUME_COOKIE, resumeCookieOptions } from "@/lib/resume";
+import { addResumeToken, parseResumeTokens, removeResumeToken, RESUME_COOKIE, resumeCookieOptions } from "@/lib/resume";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { asOne } from "@/lib/utils";
 import { evaluationSchema, evaluationSyncSchema, startCuppingSchema, sessionSubmissionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
 
 type ScoreInput = {
@@ -92,6 +94,29 @@ async function authorizedRun(participantSessionId: string) {
     throw new AppError("Your cupping session could not be verified. Please start again.");
   }
   return run;
+}
+
+async function sessionMailForRun(run: { participant_id: string; session_id: string }): Promise<SessionMail | null> {
+  const supabase = getServiceClient();
+  const [{ data: person }, { data: session }, coffees] = await Promise.all([
+    supabase.from("participants").select("name, email").eq("id", run.participant_id).maybeSingle(),
+    supabase.from("sessions").select("name, events(name)").eq("id", run.session_id).maybeSingle(),
+    getCoffeesForSession(run.session_id, true),
+  ]);
+  if (!person?.email) return null;
+  const event = asOne(session?.events as { name: string } | { name: string }[] | null);
+  return {
+    to: person.email as string,
+    name: (person.name as string) ?? "",
+    eventName: event?.name ?? (session?.name as string) ?? "",
+    sessionName: (session?.name as string) ?? "",
+    cupCount: coffees.length,
+  };
+}
+
+async function sendRunEmail(kind: "welcome" | "thanks", mail: SessionMail | null) {
+  if (!mail) return;
+  await sendSessionEmail(kind, mail);
 }
 
 async function writableRun(participantSessionId: string) {
@@ -190,6 +215,7 @@ export async function startCupping(slug: string, input: unknown): Promise<Action
     throwIfError(prior.error, "Something went wrong while starting your cupping. Please try again.");
 
     let resumeToken = prior.data?.resume_token as string | undefined;
+    const isNewRun = !prior.data?.id;
     if (prior.data?.id && prior.data.status === "completed") {
       const { error } = await supabase
         .from("participant_sessions")
@@ -218,6 +244,15 @@ export async function startCupping(slug: string, input: unknown): Promise<Action
 
     const cookieStore = await cookies();
     cookieStore.set(RESUME_COOKIE, addResumeToken(cookieStore.get(RESUME_COOKIE)?.value, resumeToken), resumeCookieOptions);
+    if (isNewRun) {
+      await sendRunEmail("welcome", {
+        to: details.email,
+        name: details.name,
+        eventName: session.event?.name ?? session.name,
+        sessionName: session.name,
+        cupCount: coffees.length,
+      });
+    }
     return { ok: true };
   } catch (error) {
     return { ok: false, message: friendlyError(error, "Something went wrong while starting your cupping. Please try again.") };
@@ -301,6 +336,7 @@ export async function saveAndSubmitCupping(input: unknown): Promise<ActionResult
       .eq("id", run.id)
       .eq("status", "in_progress");
     throwIfError(completeError, SAVE_FAILED_MESSAGE);
+    await sendRunEmail("thanks", await sessionMailForRun(run));
     return { ok: true };
   } catch (error) {
     return { ok: false, message: friendlyError(error, SAVE_FAILED_MESSAGE) };
@@ -333,8 +369,33 @@ export async function submitCupping(participantSessionId: string): Promise<Actio
       .eq("id", run.id)
       .eq("status", "in_progress");
     throwIfError(error, "Something went wrong while submitting your cupping. Please try again.");
+    await sendRunEmail("thanks", await sessionMailForRun(run));
     return { ok: true };
   } catch (error) {
     return { ok: false, message: friendlyError(error, "Something went wrong while submitting your cupping. Please try again.") };
+  }
+}
+
+export async function leaveCupping(participantSessionId: string): Promise<ActionResult> {
+  try {
+    const run = await authorizedRun(participantSessionId);
+    const supabase = getServiceClient();
+    if (run.status === "in_progress") {
+      const { count, error: countError } = await supabase
+        .from("evaluations")
+        .select("id", { count: "exact", head: true })
+        .eq("participant_session_id", run.id);
+      throwIfError(countError, "Something went wrong while leaving this table.");
+      if ((count ?? 0) === 0) {
+        const { error } = await supabase.from("participant_sessions").delete().eq("id", run.id);
+        throwIfError(error, "Something went wrong while leaving this table.");
+      }
+    }
+    const cookieStore = await cookies();
+    const remaining = removeResumeToken(cookieStore.get(RESUME_COOKIE)?.value, run.resume_token);
+    cookieStore.set(RESUME_COOKIE, remaining, remaining ? resumeCookieOptions : { ...resumeCookieOptions, maxAge: 0 });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while leaving this table.") };
   }
 }

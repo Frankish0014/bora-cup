@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth";
 import { getOrganizers } from "@/lib/data/organizers";
 import { RATING_OPTIONS } from "@/lib/ratings";
+import { isEmailConfigured } from "@/lib/email";
 import { isAuthConfigured, isSupabaseConfigured } from "@/lib/supabase/admin";
 import { getAppUrl } from "@/lib/url";
 
@@ -13,6 +14,7 @@ export default async function SettingsPage() {
   const [appUrl, user, organizers] = await Promise.all([getAppUrl(), requireAdmin(), getOrganizers()]);
   const database = isSupabaseConfigured();
   const auth = isAuthConfigured();
+  const email = isEmailConfigured();
   return (
     <div>
       <PageHeader title="Settings" description="Connection status, the cupping scale, and who can sign in to manage the cupping." />
@@ -20,7 +22,21 @@ export default async function SettingsPage() {
         <Row term="App URL" detail={appUrl || "Not set"} />
         <Row term="Database" detail={database ? "Connected" : "Missing service role key or URL"} ok={database} />
         <Row term="Admin sign-in" detail={auth ? "Connected" : "Missing anon key or URL"} ok={auth} />
+        <Row term="Cupping email" detail={email ? "Welcome and thank-you emails are on" : "Add RESEND_API_KEY and EMAIL_FROM to send mail"} ok={email} />
       </dl>
+      {email ? null : (
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-soft">
+          Create a sending key at{" "}
+          <a className="font-medium text-ink underline decoration-line underline-offset-2" href="https://resend.com/api-keys" target="_blank" rel="noreferrer">
+            resend.com/api-keys
+          </a>
+          , verify a domain at{" "}
+          <a className="font-medium text-ink underline decoration-line underline-offset-2" href="https://resend.com/domains" target="_blank" rel="noreferrer">
+            resend.com/domains
+          </a>
+          , then set both values in <code className="text-[13px]">.env.local</code> and on Vercel. Restart the app after saving. See the README Resend section for the full walkthrough.
+        </p>
+      )}
 
       <section className="mt-10">
         <SectionTitle description="Participants must choose one rating on this scale. Aroma, flavor, and overall notes are optional.">Rating scale</SectionTitle>

@@ -21,6 +21,7 @@ export type EvaluationView = {
   flavor_note: string | null;
   overall_note: string | null;
   updated_at: string;
+  submitted: boolean;
   participant: {
     id: string;
     name: string;
@@ -50,7 +51,8 @@ const EVALUATION_SELECT = `
   id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at,
   participants!inner(id, name, email, country, organization, role),
   coffee_lots!inner(id, lot_name, lot_number, cupping_code, washing_station, district, variety, process, altitude, harvest, display_order),
-  sessions!inner(id, name, event_id, events!inner(id, name))
+  sessions!inner(id, name, event_id, events!inner(id, name)),
+  participant_sessions!inner(status)
 `;
 
 type ListQuery = {
@@ -93,6 +95,7 @@ function mapEvaluation(row: Record<string, unknown>): EvaluationView {
     flavor_note: (row.flavor_note as string | null) ?? null,
     overall_note: (row.overall_note as string | null) ?? null,
     updated_at: String(row.updated_at),
+    submitted: asOne(row.participant_sessions as { status: string } | { status: string }[])?.status === "completed",
     participant,
     coffee,
     session: { id: sessionRow.id, name: sessionRow.name },
@@ -124,6 +127,7 @@ export function evaluationToCsvRow(view: EvaluationView): CsvRow {
     Flavor: view.flavor_note,
     Overall: view.overall_note,
     "Submitted At": view.updated_at,
+    Sheet: view.submitted ? "Submitted" : "In progress",
   };
 }
 
@@ -158,7 +162,7 @@ export async function getEvaluationsForExport(filters: EvaluationFilters) {
 }
 
 export async function getScoreRows(filters: EvaluationFilters) {
-  const views = await getEvaluationsForExport(filters);
+  const views = (await getEvaluationsForExport(filters)).filter((view) => view.submitted);
   const rows: ScoreRow[] = views.map((view) => ({
     coffeeId: view.coffee.id,
     coffeeName: view.coffee.lot_name,
@@ -177,6 +181,7 @@ export type DashboardEvaluation = {
   session_id: string;
   coffee_lot_id: string;
   participant_id?: string;
+  participant_session_id?: string;
   aroma_score: number;
   flavor_score: number;
   overall_score: number;
@@ -193,7 +198,7 @@ export async function getDashboardStats(filters: EvaluationFilters = { page: 1 }
   const coffeeFallback = "id, lot_name, session_id, process, active, district";
   const [participants, completed, inProgress, sessions, coffeesPrimary, recent] = await Promise.all([
     supabase.from("participants").select("id, country"),
-    supabase.from("participant_sessions").select("session_id, status", { count: "exact" }),
+    supabase.from("participant_sessions").select("id, session_id, status", { count: "exact" }),
     supabase.from("participant_sessions").select("*", { count: "exact", head: true }).eq("status", "in_progress"),
     supabase.from("sessions").select("id, name, slug, category, active, event_id").order("name"),
     supabase.from("coffee_lots").select(coffeeSelect).order("display_order"),
@@ -215,8 +220,8 @@ export async function getDashboardStats(filters: EvaluationFilters = { page: 1 }
   const recentProgress = await loadRunProgress(recentPeople.map((person) => person.id));
 
   const evaluations: DashboardEvaluation[] = [];
-  const evaluationSelect = "session_id, coffee_lot_id, participant_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at, total_score";
-  const evaluationFallback = "session_id, coffee_lot_id, participant_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at";
+  const evaluationSelect = "session_id, coffee_lot_id, participant_id, participant_session_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at, total_score";
+  const evaluationFallback = "session_id, coffee_lot_id, participant_id, participant_session_id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at";
   for (let page = 0; page < 20; page += 1) {
     const from = page * 1000;
     const first = await supabase.from("evaluations").select(evaluationSelect).order("updated_at", { ascending: true }).range(from, from + 999);
@@ -260,17 +265,20 @@ export async function getDashboardStats(filters: EvaluationFilters = { page: 1 }
     return true;
   });
 
-  const counts = new Map<string, number>();
-  for (const evaluation of visible) counts.set(evaluation.session_id, (counts.get(evaluation.session_id) ?? 0) + 1);
-  const runs = (completed.data ?? []) as Array<{ session_id: string; status: string }>;
+  const runs = (completed.data ?? []) as Array<{ id: string; session_id: string; status: string }>;
   const visibleRuns = runs.filter((run) => eventSessionIds.has(run.session_id) && (!filters.sessionId || run.session_id === filters.sessionId));
-  const uniqueParticipants = new Set(visible.map((evaluation) => evaluation.participant_id).filter(Boolean));
+  const completedRunIds = new Set(visibleRuns.filter((run) => run.status === "completed").map((run) => run.id));
+  const scoredRunIds = new Set(visible.map((evaluation) => evaluation.participant_session_id).filter(Boolean));
+  const official = visible.filter((evaluation) => evaluation.participant_session_id && completedRunIds.has(evaluation.participant_session_id));
+  const counts = new Map<string, number>();
+  for (const evaluation of official) counts.set(evaluation.session_id, (counts.get(evaluation.session_id) ?? 0) + 1);
+  const uniqueParticipants = new Set(official.map((evaluation) => evaluation.participant_id).filter(Boolean));
 
   return {
-    participants: uniqueParticipants.size || people.filter((person) => !filters.country || person.country === filters.country).length,
+    participants: uniqueParticipants.size,
     completedSessions: visibleRuns.filter((run) => run.status === "completed").length,
-    inProgressSessions: visibleRuns.filter((run) => run.status === "in_progress").length,
-    evaluations: visible,
+    inProgressSessions: visibleRuns.filter((run) => run.status === "in_progress" && scoredRunIds.has(run.id)).length,
+    evaluations: official,
     sessions: sessionRows.filter((session) => eventSessionIds.has(session.id)).map((session) => ({
       ...session,
       evaluations: counts.get(session.id) ?? 0,

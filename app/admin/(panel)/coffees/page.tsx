@@ -16,7 +16,7 @@ export default async function CoffeesPage({ searchParams }: { searchParams: Prom
     <div>
       <PageHeader
         title="Coffee lots"
-        description="Participants see lots in this order. Only filled fields are shown on the cupping sheet."
+        description="This order is the cup order on the table. Cup 1 is first on the cupping sheet, placed on the cupper’s left. Only filled fields are shown."
         action={
           <Link className={buttonClasses("primary", buttonSm)} href="/admin/coffees/new">
             Add coffee

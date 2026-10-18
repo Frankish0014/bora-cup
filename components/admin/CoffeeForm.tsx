@@ -177,7 +177,7 @@ export function CoffeeForm({
           <Textarea {...form.register("description")} />
         </Field>
         <div className="grid gap-4 sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <Field label="Display order" error={errors.display_order?.message}>
+          <Field label="Cup order" hint="1 = first on the table" error={errors.display_order?.message}>
             <Controller
               name="display_order"
               control={form.control}

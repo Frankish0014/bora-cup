@@ -19,8 +19,9 @@ export const CSV_COLUMNS = [
   "Rating",
   "Aroma",
   "Flavor",
-  "Overall",
+    "Overall",
   "Submitted At",
+  "Sheet",
 ] as const;
 
 export type CsvColumn = (typeof CSV_COLUMNS)[number];

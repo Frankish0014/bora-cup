@@ -18,14 +18,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { evaluations } = stats;
   const activeCoffees = stats.coffees.filter((coffee) => coffee.active);
   const openSessions = stats.sessions.filter((session) => session.active);
-  const cuppingStarted = stats.participants > 0 || evaluations.length > 0;
+  const cuppingStarted = stats.participants > 0 || evaluations.length > 0 || stats.completedSessions > 0 || stats.inProgressSessions > 0;
 
   if (!cuppingStarted) {
     return (
       <div>
         <PageHeader
           title="Cupping dashboard"
-          description="The table is ready. Scores appear here as cuppers save, even before they tap submit."
+          description="The table is ready. Averages appear here after cuppers tap Save and submit."
           action={
             <>
               <Link href="/admin/qr-codes" className={buttonClasses("secondary", buttonSm)}>
@@ -105,7 +105,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader
         title="Cupping dashboard"
-        description="All saved cupping feedback across events. Filter by event, cupper country, or Rwanda origin."
+        description="Averages and totals use submitted sheets only. In-progress notes stay on file and do not change the figures."
         action={
           <>
             <Link href="/admin/qr-codes" className={buttonClasses("secondary", buttonSm)}>

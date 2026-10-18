@@ -20,6 +20,7 @@ export function SessionEntry({
   formType,
   coffeeCount,
   notice,
+  emailEnabled,
 }: {
   slug: string;
   sessionName: string;
@@ -31,6 +32,7 @@ export function SessionEntry({
   formType: FormTypeId | string;
   coffeeCount: number;
   notice?: string;
+  emailEnabled?: boolean;
 }) {
   const lockedForm = formMeta(formType);
   const [started, setStarted] = useState(notice === "start");
@@ -63,7 +65,10 @@ export function SessionEntry({
           <h2 id="about-you" className="text-lg font-semibold tracking-tight text-ink">
             About you
           </h2>
-          <p className="mt-1 text-sm leading-6 text-ink-soft">Your details are only used to record your feedback. They are never shown publicly.</p>
+          <p className="mt-1 text-sm leading-6 text-ink-soft">
+            Your details are only used to record your feedback. They are never shown on the public review page.
+            {emailEnabled ? " We will send a short welcome to this email, and a thank-you after you submit." : ""}
+          </p>
           {formPolicy === "choice" ? (
             <div className="mt-6">
               <FormPicker value={chosenForm} onChange={setChosenForm} />
@@ -80,13 +85,13 @@ export function SessionEntry({
           <div className="card p-5 sm:p-6">
             <h2 className="text-sm font-semibold text-ink">How it works</h2>
             <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-5 min-[420px]:grid-cols-2">
-              <Fact term="Coffees" detail={`${coffeeCount} on one page`} />
+              <Fact term="Cups" detail={`${coffeeCount} left to right`} />
               <Fact term="Form" detail={formPolicy === "choice" ? "You choose the scoresheet" : lockedForm.short} />
               <Fact term="Save" detail="Each rating is stored as you go" />
               <Fact term="Return" detail="Re-enter with the same email to edit" />
             </dl>
             <p className="mt-5 border-t border-line pt-4 text-sm leading-6 text-ink-soft">
-              Scroll through every coffee, then save. You can come back later with the same email to change a note or rating and submit again.
+              Cup 1 is the first coffee on the table, on your left. Scroll through every lot in that order, then save. You can come back later with the same email to change a note or rating and submit again.
             </p>
           </div>
           <Button className="mt-5 w-full min-h-14 text-base" onClick={() => setStarted(true)}>

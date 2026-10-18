@@ -3,7 +3,10 @@ import { ActiveToggle, DeleteButton } from "@/components/admin/RecordActions";
 import { SessionForm } from "@/components/admin/SessionForm";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClasses, buttonSm, buttonXs } from "@/components/ui/button";
+import { CopyLink } from "@/components/ui/CopyLink";
 import { getCoffees, getEvents, getSession } from "@/lib/data/admin";
+import { sharePaths } from "@/lib/share";
+import { getAppUrl } from "@/lib/url";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -11,8 +14,16 @@ export const dynamic = "force-dynamic";
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [session, events, coffees] = await Promise.all([getSession(id), getEvents(), getCoffees(id)]);
+  const [session, events, coffees, appUrl] = await Promise.all([getSession(id), getEvents(), getCoffees(id), getAppUrl()]);
   if (!session) notFound();
+  const paths = sharePaths(session.slug, session.id);
+  const reviewUrl = `${appUrl}${paths.review}`;
+  const tableUrl = `${appUrl}${paths.table}`;
+  let cup = 0;
+  const cups = coffees.map((coffee) => {
+    if (coffee.active) cup += 1;
+    return { coffee, cup: coffee.active ? cup : null };
+  });
 
   return (
     <div>
@@ -23,6 +34,10 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         action={
           <>
             <StatusBadge active={session.active} />
+            <CopyLink url={reviewUrl} label="Copy review link" />
+            <Link className={buttonClasses("secondary", buttonSm)} href={paths.table} target="_blank" rel="noreferrer">
+              Table setup
+            </Link>
             <Link className={buttonClasses("secondary", buttonSm)} href="/admin/qr-codes">
               QR code
             </Link>
@@ -36,9 +51,9 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         <aside>
           <SectionTitle action={<SectionAction href={`/admin/coffees/new?session=${session.id}`}>Add coffee</SectionAction>}>Coffee lots</SectionTitle>
           <ol className="card divide-y divide-line">
-            {coffees.map((coffee, index) => (
+            {cups.map(({ coffee, cup: cupNumber }) => (
               <li key={coffee.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                <span className="w-6 text-ink-mute tabular">{index + 1}.</span>
+                <span className="w-14 shrink-0 text-xs text-ink-mute tabular">{cupNumber == null ? "Off" : `Cup ${cupNumber}`}</span>
                 <span className="min-w-0 flex-1 truncate font-medium text-ink">{coffee.lot_name}</span>
                 <StatusBadge active={coffee.active} />
                 <Link href={`/admin/coffees/${coffee.id}`} className={buttonClasses("secondary", buttonXs)}>
@@ -48,10 +63,14 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
             ))}
             {coffees.length === 0 ? <li className="px-4 py-8 text-center text-sm text-ink-soft">No coffees in this session yet.</li> : null}
           </ol>
-          <div className="mt-3">
+          <p className="mt-3 text-sm leading-6 text-ink-soft">
+            Cup 1 is the first lot cuppers see. Open the table-setup link so the lab places cups left to right in this order.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/admin/coffees?session=${session.id}`} className={buttonClasses("ghost", buttonSm)}>
-              Reorder on the coffee lots page
+              Reorder lots
             </Link>
+            <CopyLink url={tableUrl} label="Copy table link" className={buttonSm} />
           </div>
         </aside>
       </div>

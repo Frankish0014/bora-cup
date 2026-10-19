@@ -36,7 +36,7 @@ export default async function CoffeeAnalyticsPage({
         description={`${summary.sessionName} · ${summary.evaluations} ${summary.evaluations === 1 ? "evaluation" : "evaluations"}`}
       />
       <dl className="grid gap-3 sm:max-w-xs">
-        <Score label="Rating" value={summary.score} />
+        <Score label="Score" value={summary.score} />
       </dl>
       <div className="mt-10">
         <SectionTitle description="How many participants chose each score.">Distribution</SectionTitle>

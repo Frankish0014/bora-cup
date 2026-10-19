@@ -13,17 +13,18 @@ import { participantSchema } from "@/lib/validations";
 describe("rating scale", () => {
   it("uses the exact cupping labels", () => {
     expect(RATING_OPTIONS.map((option) => option.score)).toEqual([1, 2, 3, 4, 5]);
-    expect(RATING_OPTIONS.map((option) => option.label)).toEqual(["OK", "Good", "Very Good", "Excellent", "Take My Money"]);
-    expect(ratingLabel(5)).toBe("5 — Take My Money");
+    expect(RATING_OPTIONS.map((option) => option.label)).toEqual(["OK", "Good", "Great", "Excellent", "Take My Money"]);
+    expect(RATING_OPTIONS.map((option) => option.range)).toEqual(["80–84", "84–86", "86–88", "88–90", "99+"]);
+    expect(ratingLabel(5)).toBe("Take My Money · 99+");
     expect(ratingScale(4)).toBe("Excellent");
+    expect(ratingScale(3)).toBe("Great");
     expect(ratingScale(5)).toBe("Take My Money");
-    expect(scoreOutOf100(1)).toBe(20);
-    expect(scoreOutOf100(2)).toBe(40);
-    expect(scoreOutOf100(3)).toBe(60);
-    expect(scoreOutOf100(4)).toBe(80);
-    expect(scoreOutOf100(5)).toBe(100);
-    expect(scoreOutOf100(4.33)).toBe(86.6);
-    expect(formatAverage(3.17)).toBe("63.4");
+    expect(scoreOutOf100(1)).toBe(82);
+    expect(scoreOutOf100(2)).toBe(85);
+    expect(scoreOutOf100(3)).toBe(87);
+    expect(scoreOutOf100(4)).toBe(89);
+    expect(scoreOutOf100(5)).toBe(99);
+    expect(formatAverage(87)).toBe("87.0");
     expect(formatAverage(null)).toBe("—");
   });
 });
@@ -137,7 +138,7 @@ describe("analytics and csv", () => {
         Process: "Fully Washed",
         Altitude: "1,900 MASL",
         Harvest: "2026",
-        "Score / 100": 80,
+        "Score / 100": 89,
         Rating: "Excellent",
         Aroma: "Jasmine",
         Flavor: "Cocoa",
@@ -149,7 +150,7 @@ describe("analytics and csv", () => {
     expect(csv.startsWith("\uFEFFParticipant Name,Email,Country")).toBe(true);
     expect(CSV_COLUMNS).toHaveLength(23);
     expect(csv).toContain("Score / 100,Rating,Aroma,Flavor,Overall");
-    expect(csv).toContain("80,Excellent,Jasmine");
+    expect(csv).toContain("89,Excellent,Jasmine");
     expect(csv).toContain("'=cmd");
     expect(csv).toContain('"He said ""clean"""');
   });

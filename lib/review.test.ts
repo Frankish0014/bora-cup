@@ -14,8 +14,8 @@ describe("reportedHundred", () => {
   });
 
   it("scales a 1–5 rating when there is no form total", () => {
-    expect(reportedHundred(5, null)).toBe(100);
-    expect(reportedHundred(1, null)).toBe(20);
+    expect(reportedHundred(5, null)).toBe(99);
+    expect(reportedHundred(1, null)).toBe(82);
   });
 });
 
@@ -62,20 +62,20 @@ describe("formSessionReview", () => {
     expect(summary.cupperCount).toBe(2);
     expect(summary.submitted).toBe(1);
     expect(summary.ratedCount).toBe(2);
-    expect(summary.averageHundred).toBe(80);
+    expect(summary.averageHundred).toBe(93);
   });
 
   it("groups notes under the matching coffee", () => {
     const first = coffeeReview(review, "lot-1");
     expect(first.entries).toHaveLength(2);
-    expect(first.averageHundred).toBe(100);
+    expect(first.averageHundred).toBe(99);
     expect(first.entries[0].score.aroma).toBe("Floral");
   });
 
   it("keeps in-progress notes visible without using them in the average", () => {
     const first = coffeeReview(review, "lot-1");
     expect(first.entries.map((entry) => entry.cupper.name)).toEqual(["Aline", "Jean"]);
-    expect(first.averageHundred).toBe(100);
+    expect(first.averageHundred).toBe(99);
   });
 });
 

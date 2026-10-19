@@ -39,11 +39,11 @@ export default async function SettingsPage() {
       )}
 
       <section className="mt-10">
-        <SectionTitle description="Participants must choose one rating on this scale. Aroma, flavor, and overall notes are optional.">Rating scale</SectionTitle>
+        <SectionTitle description="Each Bora rating maps onto a cupping score. Aroma, flavor, and overall notes stay optional.">Rating scale</SectionTitle>
         <ol className="card divide-y divide-line">
           {RATING_OPTIONS.map((option) => (
             <li key={option.score} className="flex items-center gap-4 px-5 py-3 text-[15px]">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink font-display text-base text-white tabular">{option.score}</span>
+              <span className="min-w-[4.5rem] font-display text-base tabular text-ink">{option.range}</span>
               <span className="font-medium text-ink">{option.label}</span>
             </li>
           ))}

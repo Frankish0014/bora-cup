@@ -18,7 +18,9 @@ describe("form scoring", () => {
       faultCups: 0,
     };
     expect(scaTotal(payload)).toBe(86);
-    expect(preferenceFromTotal(86)).toBe(4);
+    expect(preferenceFromTotal(86)).toBe(3);
+    expect(preferenceFromTotal(89)).toBe(4);
+    expect(preferenceFromTotal(99)).toBe(5);
   });
 
   it("adds the Cup of Excellence base of 36", () => {
@@ -43,6 +45,7 @@ describe("form scoring", () => {
   });
 
   it("fills a derived total on the Bora sheet", () => {
-    expect(syncDraft({ ...emptyDraft("bora"), score: 5 }).total).toBe(100);
+    expect(syncDraft({ ...emptyDraft("bora"), score: 5 }).total).toBe(99);
+    expect(syncDraft({ ...emptyDraft("bora"), score: 3 }).total).toBe(87);
   });
 });

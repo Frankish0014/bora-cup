@@ -62,7 +62,7 @@ export function CuppingExperience({
     );
     const savedIds = new Set(evaluations.map((evaluation) => evaluation.coffee_lot_id));
     const restored = mergeUnsavedDrafts(base, parseStoredDrafts(snapshot, formType), savedIds);
-    const next = { ...restored };
+    const next = Object.fromEntries(Object.entries(restored).map(([id, draft]) => [id, syncDraft(draft)]));
     for (const [id, partial] of Object.entries(overrides)) {
       if (next[id]) next[id] = syncDraft({ ...next[id], ...partial, payload: partial.payload ? { ...next[id].payload, ...partial.payload } : next[id].payload });
     }
@@ -196,10 +196,17 @@ export function CuppingExperience({
         {coffees.map((coffee, index) => {
           const draft = drafts[coffee.id] ?? emptyDraft(formType);
           const complete = isDraftComplete(draft);
+          const scored = draft.score != null || Object.values(draft.payload).some((value) => typeof value === "number");
           return (
             <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("scroll-mt-28", error && !complete && "rounded-2xl ring-2 ring-danger/40")}>
               <article className="card overflow-hidden">
-                <CoffeeInformationCard lot={coffee} position={index + 1} />
+                <CoffeeInformationCard
+                  lot={coffee}
+                  position={index + 1}
+                  formType={formType}
+                  rating={scored ? draft.score : null}
+                  total={scored ? draft.total : null}
+                />
                 <div className="p-3 sm:p-4">
                   <ProtocolFields coffeeId={coffee.id} draft={draft} onChange={(partial) => update(coffee.id, partial)} />
                 </div>

@@ -24,7 +24,7 @@ export function AnalyticsCard({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Average label="Rating" value={score} />
+        <Average label="Score" value={score} />
         <Link href={href} className={buttonClasses("secondary", `${buttonSm} ml-1`)}>
           Details
         </Link>

@@ -1,6 +1,6 @@
 import { average, distribution, emptyDistribution, type ScoreDistribution } from "@/lib/analytics";
 import { formMeta } from "@/lib/forms";
-import { isRatingScore, scoreOutOf100 } from "@/lib/ratings";
+import { cuppingScore, isRatingScore } from "@/lib/ratings";
 
 export type ReviewLot = {
   id: string;
@@ -89,8 +89,7 @@ function blank(value: string | null | undefined) {
 }
 
 export function reportedHundred(rating: number | null, total: number | null | undefined) {
-  if (total != null && !Number.isNaN(total)) return Math.round(total * 10) / 10;
-  return scoreOutOf100(rating);
+  return cuppingScore(rating, total);
 }
 
 export function latestRuns(runs: ReviewRunInput[]) {

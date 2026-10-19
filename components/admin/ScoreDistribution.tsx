@@ -17,7 +17,7 @@ export function ScoreDistribution({ title, counts }: { title: string; counts: Co
             <li key={option.score} className="text-sm">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="text-ink">
-                  <span className="mr-2 text-ink-mute tabular">{option.score}</span>
+                  <span className="mr-2 text-ink-mute tabular">{option.range}</span>
                   {option.label}
                 </span>
                 <span className="text-ink-soft tabular">{count}</span>

@@ -5,7 +5,7 @@ import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { average, countBy, distribution } from "@/lib/analytics";
 import { getDashboardStats, getEvents, type DashboardEvaluation } from "@/lib/data/admin";
 import { filtersToQuery, parseEvaluationFilters } from "@/lib/filters";
-import { RATING_OPTIONS, formatAverage, scoreOutOf100 } from "@/lib/ratings";
+import { RATING_OPTIONS, cuppingScore, formatAverage } from "@/lib/ratings";
 import { RWANDA_PROVINCES, allRwandaDistricts, resolveProvince } from "@/lib/rwanda";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
@@ -58,7 +58,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     );
   }
 
-  const overallAverage = average(evaluations.map((row) => row.overall_score));
+  const hundreds = evaluations.map((row) => cuppingScore(row.overall_score, row.total_score)).filter((value): value is number => value != null);
+  const overallAverage = average(hundreds);
   const overallDistribution = distribution(evaluations.map((row) => row.overall_score));
   const aromaNotes = evaluations.filter((row) => row.aroma_note?.trim()).length;
   const flavorNotes = evaluations.filter((row) => row.flavor_note?.trim()).length;
@@ -73,7 +74,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const byCoffee = new Map<string, number[]>();
   for (const row of evaluations) {
     const list = byCoffee.get(row.coffee_lot_id) ?? [];
-    list.push(row.overall_score);
+    const hundred = cuppingScore(row.overall_score, row.total_score);
+    if (hundred == null) continue;
+    list.push(hundred);
     byCoffee.set(row.coffee_lot_id, list);
   }
   const topCoffees = [...byCoffee.entries()]
@@ -89,13 +92,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const lot = lotById.get(row.coffee_lot_id);
     const region = resolveProvince(lot ?? {}) ?? lot?.district?.trim() ?? "Origin not set";
     const list = byRegion.get(region) ?? [];
-    list.push(row.overall_score);
+    const hundred = cuppingScore(row.overall_score, row.total_score);
+    if (hundred == null) continue;
+    list.push(hundred);
     byRegion.set(region, list);
   }
   const regionRows = [...byRegion.entries()]
     .map(([label, scores]) => ({
       label,
-      value: scoreOutOf100(average(scores) ?? 0) ?? 0,
+      value: average(scores) ?? 0,
       hint: `${scores.length} ${scores.length === 1 ? "score" : "scores"}`,
       href: `/admin/dashboard${filtersToQuery(filters, { province: RWANDA_PROVINCES.includes(label as (typeof RWANDA_PROVINCES)[number]) ? label : filters.province, district: RWANDA_PROVINCES.includes(label as (typeof RWANDA_PROVINCES)[number]) ? undefined : label, page: 1 })}`,
     }))
@@ -140,7 +145,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Kpi label="Participants" value={stats.participants.toLocaleString("en-US")} hint={`${countries.length} ${countries.length === 1 ? "country" : "countries"}`} accent />
         <Kpi label="Evaluations" value={evaluations.length.toLocaleString("en-US")} hint={`${withNotes} with notes`} />
-        <Kpi label="Avg rating" value={formatAverage(overallAverage)} hint="out of 100" />
+        <Kpi label="Avg score" value={formatAverage(overallAverage)} hint="from submitted sheets" />
         <Kpi label="Completed" value={stats.completedSessions.toLocaleString("en-US")} hint="cupping sessions" />
         <Kpi label="In progress" value={stats.inProgressSessions.toLocaleString("en-US")} hint="cupping sessions" />
         <Kpi label="Coffees rated" value={`${cuppedCoffees}/${activeCoffees.length}`} hint="have at least one rating" />
@@ -152,10 +157,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <ChartEmpty />
           ) : (
             <DonutChart
-              centerLabel="avg rating"
+              centerLabel="avg score"
               centerValue={formatAverage(overallAverage)}
               slices={[...RATING_OPTIONS].reverse().map((option) => ({
-                label: `${option.score} ${option.label}`,
+                label: `${option.label} ${option.range}`,
                 value: overallDistribution[option.score],
                 color: RATING_COLORS[option.score],
               }))}
@@ -236,7 +241,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             rows={topCoffees.map((coffee) => ({
               label: coffee.label,
               hint: `${coffee.count} ${coffee.count === 1 ? "score" : "scores"}`,
-              value: scoreOutOf100(coffee.value) ?? 0,
+              value: coffee.value,
               href: `/admin/analytics/${coffee.id}`,
             }))}
             max={100}

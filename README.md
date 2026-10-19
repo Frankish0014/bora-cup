@@ -18,15 +18,17 @@ Participants do not create accounts. Administrators sign in with Supabase Auth.
 
 ## Rating scale
 
-Every score in the participant interface uses this scale:
+The Bora sheet uses this scale. The number on the lot card is the cupping score that rating stands for:
 
-| Score | Label |
-| ---: | --- |
-| 1 | OK |
-| 2 | Good |
-| 3 | Very Good |
-| 4 | Excellent |
-| 5 | Take My Money |
+| Rating | Score |
+| --- | ---: |
+| OK | 80–84 |
+| Good | 84–86 |
+| Great | 86–88 |
+| Excellent | 88–90 |
+| Take My Money | 99+ |
+
+Other sheets (SCA, CVA, COE, roastery) add their own fields into a running total on the same lot card. Dashboard averages use those confirmed form totals.
 
 ## How the data is protected
 

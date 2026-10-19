@@ -30,7 +30,9 @@ export function RatingSelector({
         </p>
         <p aria-live="polite" className="shrink-0">
           {selected ? (
-            <span className="inline-flex items-center rounded-full bg-leaf px-2 py-0.5 text-[11px] font-medium text-white">{selected.label}</span>
+            <span className="inline-flex items-center rounded-full bg-leaf px-2 py-0.5 text-[11px] font-medium text-white">
+              {selected.label} · {selected.range}
+            </span>
           ) : (
             <span className="text-[11px] text-ink-mute">Required</span>
           )}
@@ -38,7 +40,15 @@ export function RatingSelector({
       </div>
       <div className="mt-1 grid grid-cols-5 gap-1 sm:mt-1.5 sm:gap-1.5" role="radiogroup" aria-labelledby={`${name}-question`}>
         {RATING_OPTIONS.map((option) => (
-          <RatingOption key={option.score} score={option.score} label={option.label} name={name} checked={value === option.score} onChange={onChange} />
+          <RatingOption
+            key={option.score}
+            score={option.score}
+            label={option.label}
+            range={option.range}
+            name={name}
+            checked={value === option.score}
+            onChange={onChange}
+          />
         ))}
       </div>
     </fieldset>

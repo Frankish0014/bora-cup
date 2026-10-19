@@ -17,7 +17,7 @@ export default async function EvaluationsPage({ searchParams }: { searchParams: 
     <div>
       <PageHeader
         title="Evaluations"
-        description="Every saved score, as submitted. Scores use the cupping scale: OK, Good, Very Good, Excellent, Take My Money."
+        description="Every saved score, as submitted. The Bora scale is OK 80–84, Good 84–86, Great 86–88, Excellent 88–90, Take My Money 99+."
         action={
           <a className={buttonClasses("primary", buttonSm)} href={`/api/export/evaluations${filtersToQuery({ ...filters, page: 1 })}`}>
             Export CSV

@@ -1,6 +1,6 @@
 import "server-only";
 import { summarizeCoffees, type ScoreRow } from "@/lib/analytics";
-import { ratingScale, scoreOutOf100 } from "@/lib/ratings";
+import { cuppingScore, ratingScale } from "@/lib/ratings";
 import type { CsvRow } from "@/lib/csv";
 import { throwIfError } from "@/lib/errors";
 import type { EvaluationFilters } from "@/lib/filters";
@@ -20,6 +20,7 @@ export type EvaluationView = {
   aroma_note: string | null;
   flavor_note: string | null;
   overall_note: string | null;
+  total_score: number | null;
   updated_at: string;
   submitted: boolean;
   participant: {
@@ -48,7 +49,7 @@ export type EvaluationView = {
 };
 
 const EVALUATION_SELECT = `
-  id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, updated_at,
+  id, aroma_score, flavor_score, overall_score, aroma_note, flavor_note, overall_note, total_score, updated_at,
   participants!inner(id, name, email, country, organization, role),
   coffee_lots!inner(id, lot_name, lot_number, cupping_code, washing_station, district, variety, process, altitude, harvest, display_order),
   sessions!inner(id, name, event_id, events!inner(id, name)),
@@ -94,6 +95,7 @@ function mapEvaluation(row: Record<string, unknown>): EvaluationView {
     aroma_note: (row.aroma_note as string | null) ?? null,
     flavor_note: (row.flavor_note as string | null) ?? null,
     overall_note: (row.overall_note as string | null) ?? null,
+    total_score: row.total_score == null ? null : Number(row.total_score),
     updated_at: String(row.updated_at),
     submitted: asOne(row.participant_sessions as { status: string } | { status: string }[])?.status === "completed",
     participant,
@@ -121,7 +123,7 @@ export function evaluationToCsvRow(view: EvaluationView): CsvRow {
     Process: view.coffee.process,
     Altitude: view.coffee.altitude,
     Harvest: view.coffee.harvest,
-    "Score / 100": scoreOutOf100(view.overall_score),
+    "Score / 100": cuppingScore(view.overall_score, view.total_score),
     Rating: ratingScale(view.overall_score),
     Aroma: view.aroma_note,
     Flavor: view.flavor_note,
@@ -140,6 +142,17 @@ async function fetchEvaluationBatch(filters: EvaluationFilters, from: number, to
     .order("updated_at", { ascending: false })
     .range(from, to);
   const { data, error, count } = await query;
+  if (error && /total_score|schema cache/i.test(error.message)) {
+    const retry = applyFilters(
+      supabase.from("evaluations").select(EVALUATION_SELECT.replace(", total_score", ""), { count: "exact" }) as unknown as ListQuery,
+      filters,
+    )
+      .order("updated_at", { ascending: false })
+      .range(from, to);
+    const second = await retry;
+    throwIfError(second.error, "Something went wrong while loading evaluations.");
+    return { rows: ((second.data ?? []) as Record<string, unknown>[]).map(mapEvaluation), count: second.count ?? 0 };
+  }
   throwIfError(error, "Something went wrong while loading evaluations.");
   return { rows: ((data ?? []) as Record<string, unknown>[]).map(mapEvaluation), count: count ?? 0 };
 }
@@ -168,7 +181,8 @@ export async function getScoreRows(filters: EvaluationFilters) {
     coffeeName: view.coffee.lot_name,
     sessionName: view.session.name,
     displayOrder: view.coffee.display_order,
-    score: view.overall_score,
+    score: cuppingScore(view.overall_score, view.total_score) ?? view.overall_score,
+    rating: view.overall_score,
     country: view.participant.country,
     aroma: view.aroma_note,
     flavor: view.flavor_note,

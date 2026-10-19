@@ -7,6 +7,7 @@ export type ScoreRow = {
   sessionName: string;
   displayOrder: number;
   score: number;
+  rating?: number;
   country: string;
   aroma: string | null;
   flavor: string | null;
@@ -60,7 +61,7 @@ export function summarizeCoffees(rows: ScoreRow[]) {
       displayOrder: list[0].displayOrder,
       evaluations: list.length,
       score: average(list.map((row) => row.score)),
-      scoreDistribution: distribution(list.map((row) => row.score)),
+      scoreDistribution: distribution(list.map((row) => row.rating ?? row.score)),
       countries: countBy(list.map((row) => row.country)),
       comments: list.map((row) => formatNotes(row)).filter((comment): comment is string => Boolean(comment)),
     }))

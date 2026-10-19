@@ -5,7 +5,7 @@ export const FORM_TYPES = [
     id: "bora",
     name: "Bora Cupping Sheet",
     short: "Bora",
-    summary: "One required rating from OK to Take My Money, with optional aroma, flavor, and overall notes.",
+    summary: "One required rating from OK (80–84) to Take My Money (99+), with optional aroma, flavor, and overall notes.",
   },
   {
     id: "sca_traditional",
@@ -67,9 +67,9 @@ export function emptyDraft(formType: FormTypeId = "bora"): CuppingDraft {
 export function preferenceFromTotal(total: number | null | undefined): 1 | 2 | 3 | 4 | 5 | null {
   if (total == null || Number.isNaN(total)) return null;
   if (total >= 90) return 5;
-  if (total >= 85) return 4;
-  if (total >= 80) return 3;
-  if (total >= 70) return 2;
+  if (total >= 88) return 4;
+  if (total >= 86) return 3;
+  if (total >= 84) return 2;
   if (total >= 1) return 1;
   return null;
 }

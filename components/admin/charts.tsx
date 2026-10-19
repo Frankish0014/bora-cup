@@ -227,7 +227,7 @@ export function RatingLegend() {
       {RATING_OPTIONS.map((option) => (
         <li key={option.score} className="flex items-center gap-1.5">
           <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm" style={{ background: RATING_COLORS[option.score] }} />
-          {option.score} {option.label}
+          {option.label} {option.range}
         </li>
       ))}
     </ul>

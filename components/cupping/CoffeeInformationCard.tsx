@@ -1,5 +1,5 @@
 import { visibleCoffeeFields, type CoffeeFields } from "@/lib/coffee";
-import { formMeta, type FormTypeId } from "@/lib/forms";
+import { type FormTypeId } from "@/lib/forms";
 import { formatScoreBand, ratingScale } from "@/lib/ratings";
 
 const FACT_KEYS = ["process", "variety", "altitude", "harvest", "washing_station", "province", "district", "sector", "cell", "country", "producer", "cooperative", "lot_number"] as const;
@@ -27,7 +27,7 @@ export function CoffeeInformationCard({
         ? String(total)
         : total.toFixed(1)
       : formatScoreBand(rating, total);
-  const caption = ratingScale(rating) || (total != null && formType ? formMeta(formType).short : "");
+  const caption = total && total >= 80 ? ratingScale(rating) : "";
 
   return (
     <div className={photo ? "grid grid-cols-[minmax(0,1.05fr)_minmax(7.5rem,0.9fr)] items-stretch bg-leaf text-white sm:grid-cols-[minmax(0,1.15fr)_minmax(13rem,1fr)]" : "flex items-stretch bg-leaf text-white"}>

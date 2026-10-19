@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coeTotal, isDraftComplete, preferenceFromTotal, scaTotal, emptyDraft, syncDraft } from "@/lib/forms";
+import { coeTotal, cvaTotal, isDraftComplete, preferenceFromTotal, scaTotal, emptyDraft, syncDraft } from "@/lib/forms";
 
 describe("form scoring", () => {
   it("totals an SCA sheet and maps it onto the 1–5 preference scale", () => {
@@ -24,6 +24,8 @@ describe("form scoring", () => {
   });
 
   it("adds the Cup of Excellence base of 36", () => {
+    expect(coeTotal({})).toBe(0);
+    expect(coeTotal({ cleanCup: 8 })).toBe(44);
     expect(
       coeTotal({
         cleanCup: 8,
@@ -36,6 +38,20 @@ describe("form scoring", () => {
         overall: 7,
       }),
     ).toBe(91);
+  });
+
+  it("adds CVA intensities and preference into one running score", () => {
+    expect(cvaTotal({})).toBe(0);
+    expect(cvaTotal({ hedonic: 8 })).toBe(88.9);
+    expect(cvaTotal({ fragrance: 15 })).toBe(100);
+    expect(cvaTotal({ fragrance: 15, hedonic: 9 })).toBe(100);
+    expect(cvaTotal({ fragrance: 0, hedonic: 9 })).toBe(50);
+  });
+
+  it("keeps an empty Cup of Excellence sheet at 0 with no preference band", () => {
+    const draft = syncDraft(emptyDraft("coe"));
+    expect(draft.total).toBe(0);
+    expect(draft.score).toBeNull();
   });
 
   it("treats the Bora sheet as complete once a rating is chosen", () => {

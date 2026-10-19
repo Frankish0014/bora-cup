@@ -196,7 +196,7 @@ export function CuppingExperience({
         {coffees.map((coffee, index) => {
           const draft = drafts[coffee.id] ?? emptyDraft(formType);
           const complete = isDraftComplete(draft);
-          const scored = draft.score != null || Object.values(draft.payload).some((value) => typeof value === "number");
+          const liveTotal = formType === "bora" ? (draft.score != null ? draft.total : null) : (draft.total ?? 0);
           return (
             <section key={coffee.id} id={`coffee-${coffee.id}`} className={cn("scroll-mt-28", error && !complete && "rounded-2xl ring-2 ring-danger/40")}>
               <article className="card overflow-hidden">
@@ -204,8 +204,8 @@ export function CuppingExperience({
                   lot={coffee}
                   position={index + 1}
                   formType={formType}
-                  rating={scored ? draft.score : null}
-                  total={scored ? draft.total : null}
+                  rating={liveTotal ? draft.score : null}
+                  total={liveTotal}
                 />
                 <div className="p-3 sm:p-4">
                   <ProtocolFields coffeeId={coffee.id} draft={draft} onChange={(partial) => update(coffee.id, partial)} />

@@ -17,13 +17,13 @@ export const FORM_TYPES = [
     id: "sca_cva",
     name: "SCA Coffee Value Assessment",
     short: "SCA CVA",
-    summary: "Descriptive intensities, check-all-that-apply flavors, and a 9-point preference scale.",
+    summary: "Descriptive intensities, check-all-that-apply flavors, and a 9-point preference. Selected fields average into the lot score.",
   },
   {
     id: "coe",
     name: "Cup of Excellence Scoresheet",
     short: "Cup of Excellence",
-    summary: "36-point base plus eight attributes from 0 to 8, used in COE competitions.",
+    summary: "Starts at 0. The 36-point base is added with the first attribute, then each score from 0 to 8 adds on.",
   },
   {
     id: "roastery",
@@ -146,7 +146,12 @@ function num(payload: Record<string, unknown>, key: string) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function hasNumeric(payload: Record<string, unknown>, keys: readonly string[]) {
+  return keys.some((key) => num(payload, key) != null);
+}
+
 export function scaTotal(payload: Record<string, unknown>) {
+  if (!hasNumeric(payload, [...SCA_KEYS, "taintCups", "faultCups"])) return 0;
   const attributes = SCA_KEYS.reduce((sum, key) => sum + (num(payload, key) ?? 0), 0);
   const taints = Math.max(0, Math.round(num(payload, "taintCups") ?? 0));
   const faults = Math.max(0, Math.round(num(payload, "faultCups") ?? 0));
@@ -154,20 +159,28 @@ export function scaTotal(payload: Record<string, unknown>) {
 }
 
 export function coeTotal(payload: Record<string, unknown>) {
+  if (!hasNumeric(payload, COE_ATTRIBUTES.map((item) => item.key))) return 0;
   const attributes = COE_ATTRIBUTES.reduce((sum, item) => sum + (num(payload, item.key) ?? 0), 0);
   return Math.round((36 + attributes) * 100) / 100;
 }
 
 export function roasteryTotal(payload: Record<string, unknown>) {
   const values = ROASTERY_ATTRIBUTES.map((item) => num(payload, item.key)).filter((value): value is number => value != null);
-  if (values.length === 0) return null;
+  if (values.length === 0) return 0;
   return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10 * 10) / 10;
 }
 
+/** Selected intensities and preference each scale to 100, then average. Empty stays 0. */
 export function cvaTotal(payload: Record<string, unknown>) {
+  const parts: number[] = [];
+  for (const item of CVA_INTENSITIES) {
+    const value = num(payload, item.key);
+    if (value != null) parts.push((value / 15) * 100);
+  }
   const hedonic = num(payload, "hedonic");
-  if (hedonic == null) return null;
-  return Math.round((hedonic / 9) * 1000) / 10;
+  if (hedonic != null) parts.push((hedonic / 9) * 100);
+  if (parts.length === 0) return 0;
+  return Math.round((parts.reduce((sum, value) => sum + value, 0) / parts.length) * 10) / 10;
 }
 
 export function draftTotal(draft: CuppingDraft) {

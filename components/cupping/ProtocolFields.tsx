@@ -95,6 +95,7 @@ export function ProtocolFields({
     const tags = Array.isArray(draft.payload.tags) ? (draft.payload.tags as string[]) : [];
     return (
       <div className="space-y-3">
+        <p className="text-[11px] text-ink-mute">Starts at 0. Each selected intensity and preference averages into the lot score.</p>
         <div className="grid grid-cols-2 gap-2">
           {CVA_INTENSITIES.map((item) => (
             <NumberPick
@@ -150,7 +151,7 @@ export function ProtocolFields({
   if (draft.formType === "coe") {
     return (
       <div className="space-y-3">
-        <p className="text-[11px] text-ink-mute">Base score 36, plus eight attributes from 0 to 8.</p>
+        <p className="text-[11px] text-ink-mute">Starts at 0. The 36-point base is added with the first attribute, then each score adds on.</p>
         <div className="grid grid-cols-2 gap-2">
           {COE_ATTRIBUTES.map((attribute) => (
             <NumberPick

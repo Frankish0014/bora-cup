@@ -119,7 +119,7 @@ If nothing arrives, check [https://resend.com/emails](https://resend.com/emails)
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Open the SQL editor and run `supabase/migrations/20260926120000_init.sql`.
+2. Open the SQL editor and run `supabase/migrations/20260926120000_init.sql`, then later files in `supabase/migrations/` including `20261020120000_session_joining.sql`.
 3. Copy the project URL, anon key, and service role key into `.env.local`.
 4. Add events, sessions, and coffee lots in Admin. There is no sample catalog in this repository.
 
@@ -176,7 +176,9 @@ The service role key stays in server environment variables. Do not prefix it wit
 
 ## Production notes
 
-- Deactivate a session to close its QR code without deleting feedback.
+- After everyone in the room has joined, **Close table** on the session page. The QR stays valid for people already on the sheet and blocks new cuppers.
+- Remove a cupper from that same table list. Their scores leave the review sheet and averages. This does not delete their name from other sessions.
+- Deactivate a session to hide it from the public list without deleting feedback.
 - Deleting a coffee or session that already has evaluations deactivates it instead, so the history stays intact.
 - Comments are stored and shown as written.
 - Analytics describe averages and score counts. They do not declare a winner.

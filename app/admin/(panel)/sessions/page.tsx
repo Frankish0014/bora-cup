@@ -1,6 +1,6 @@
 import { ActiveToggle } from "@/components/admin/RecordActions";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { StatusBadge } from "@/components/ui/badge";
+import { StatusBadge, TableStatusBadge } from "@/components/ui/badge";
 import { buttonClasses, buttonSm, buttonXs } from "@/components/ui/button";
 import { EmptyRow, TD, TH, TR, Table, TableShell } from "@/components/ui/table";
 import { getSessions } from "@/lib/data/admin";
@@ -14,7 +14,7 @@ export default async function SessionsPage() {
     <div>
       <PageHeader
         title="Sessions"
-        description="Active sessions are open to participants. Deactivate a session to close its link."
+        description="Close a table after the room has joined so the QR cannot add extra cuppers. Deactivate a session to hide it."
         action={
           <Link className={buttonClasses("primary", buttonSm)} href="/admin/sessions/new">
             Add session
@@ -47,7 +47,10 @@ export default async function SessionsPage() {
                   <code className="rounded bg-paper px-1.5 py-0.5 font-mono text-xs text-ink-soft">/session/{session.slug}</code>
                 </TD>
                 <TD>
-                  <StatusBadge active={session.active} />
+                  <span className="flex flex-col items-start gap-1">
+                    <StatusBadge active={session.active} />
+                    {session.joining_open === false ? <TableStatusBadge open={false} /> : null}
+                  </span>
                 </TD>
                 <TD className="text-right">
                   <span className="inline-flex items-center justify-end gap-2">

@@ -9,6 +9,7 @@ import { isFormType, type FormTypeId } from "@/lib/forms";
 import { addResumeToken, parseResumeTokens, removeResumeToken, RESUME_COOKIE, resumeCookieOptions } from "@/lib/resume";
 import { getServiceClient } from "@/lib/supabase/admin";
 import { asOne } from "@/lib/utils";
+import { canJoinTable, TABLE_CLOSED_MESSAGE } from "@/lib/session-room";
 import { evaluationSchema, evaluationSyncSchema, startCuppingSchema, sessionSubmissionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
 
 type ScoreInput = {
@@ -156,6 +157,22 @@ export async function startCupping(slug: string, input: unknown): Promise<Action
     const chosenType = session.form_policy === "choice" && isFormType(details.formType) ? details.formType : lockedType;
     const { data: existing, error: existingError } = await supabase.from("participants").select("id").eq("email", details.email).maybeSingle();
     throwIfError(existingError, "Something went wrong while starting your cupping. Please try again.");
+
+    let alreadyOnSheet = false;
+    if (existing?.id) {
+      const { data: onSheet, error: onSheetError } = await supabase
+        .from("participant_sessions")
+        .select("id")
+        .eq("participant_id", existing.id)
+        .eq("session_id", session.id)
+        .limit(1)
+        .maybeSingle();
+      throwIfError(onSheetError, "Something went wrong while starting your cupping. Please try again.");
+      alreadyOnSheet = Boolean(onSheet?.id);
+    }
+    if (!canJoinTable(session.joining_open, alreadyOnSheet)) {
+      throw new AppError(TABLE_CLOSED_MESSAGE);
+    }
 
     let participantId = existing?.id as string | undefined;
     if (participantId) {

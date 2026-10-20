@@ -1,4 +1,5 @@
 import { BackLink, PageHeader, SectionTitle } from "@/components/admin/PageHeader";
+import { RemoveCupperButton } from "@/components/admin/RecordActions";
 import { Badge } from "@/components/ui/badge";
 import { getParticipantDetail } from "@/lib/data/admin";
 import { formatNotes } from "@/lib/cupping";
@@ -27,18 +28,21 @@ export default async function ParticipantDetailPage({ params }: { params: Promis
           {detail.runs.map((run) => (
             <li key={run.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 text-[15px]">
               <span className="font-medium text-ink">{run.sessionName}</span>
-              {run.status === "completed" ? (
-                <span className="flex items-center gap-2 text-sm text-ink-soft">
-                  <Badge tone="leaf">Completed</Badge>
-                  <span className="tabular">{run.progress}</span>
-                  <span className="tabular">{formatDateTime(run.completed_at)}</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-2 text-sm text-ink-soft">
-                  <Badge>In progress</Badge>
-                  <span>{run.progress}</span>
-                </span>
-              )}
+              <span className="flex flex-wrap items-center justify-end gap-2 text-sm text-ink-soft">
+                {run.status === "completed" ? (
+                  <>
+                    <Badge tone="leaf">Completed</Badge>
+                    <span className="tabular">{run.progress}</span>
+                    <span className="tabular">{formatDateTime(run.completed_at)}</span>
+                  </>
+                ) : (
+                  <>
+                    <Badge>In progress</Badge>
+                    <span>{run.progress}</span>
+                  </>
+                )}
+                <RemoveCupperButton runId={run.id} name={participant.name} />
+              </span>
             </li>
           ))}
           {detail.runs.length === 0 ? <li className="px-5 py-8 text-center text-sm text-ink-soft">No sessions yet.</li> : null}

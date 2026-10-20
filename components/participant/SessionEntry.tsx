@@ -21,6 +21,7 @@ export function SessionEntry({
   coffeeCount,
   notice,
   emailEnabled,
+  joiningClosed,
 }: {
   slug: string;
   sessionName: string;
@@ -33,9 +34,10 @@ export function SessionEntry({
   coffeeCount: number;
   notice?: string;
   emailEnabled?: boolean;
+  joiningClosed?: boolean;
 }) {
   const lockedForm = formMeta(formType);
-  const [started, setStarted] = useState(notice === "start");
+  const [started, setStarted] = useState(notice === "start" || Boolean(joiningClosed));
   const [chosenForm, setChosenForm] = useState<FormTypeId>(lockedForm.id);
 
   return (
@@ -57,7 +59,11 @@ export function SessionEntry({
 
       {started ? (
         <section className="card mt-10 animate-rise p-5 sm:p-7" aria-labelledby="about-you">
-          {notice === "start" ? (
+          {joiningClosed ? (
+            <div className="mb-5">
+              <Alert tone="info">This table is closed to new cuppers. If you already started here, enter the same email to continue.</Alert>
+            </div>
+          ) : notice === "start" ? (
             <div className="mb-5">
               <Alert tone="info">Enter your details to begin cupping. If you already cupped this session, you will see your previous scores.</Alert>
             </div>

@@ -25,3 +25,12 @@ export function StatusBadge({ active }: { active: boolean }) {
     </Badge>
   );
 }
+
+export function TableStatusBadge({ open }: { open: boolean }) {
+  return (
+    <Badge tone={open ? "leaf" : "neutral"}>
+      <span aria-hidden="true" className={cn("h-1.5 w-1.5 rounded-full", open ? "bg-leaf" : "bg-ink-mute")} />
+      {open ? "Table open" : "Table closed"}
+    </Badge>
+  );
+}

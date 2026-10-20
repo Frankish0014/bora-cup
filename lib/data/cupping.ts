@@ -27,6 +27,7 @@ export async function getSessionBySlug(slug: string) {
     form_type: (["bora", "sca_traditional", "sca_cva", "coe", "roastery"] as const).includes(data.form_type as never)
       ? (data.form_type as SessionRecord["form_type"])
       : "bora",
+    joining_open: data.joining_open !== false,
     active: Boolean(data.active),
     created_at: data.created_at as string,
     updated_at: data.updated_at as string,

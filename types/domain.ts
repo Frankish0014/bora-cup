@@ -27,6 +27,7 @@ export type SessionRecord = {
   photo_url: string | null;
   form_policy?: "locked" | "choice";
   form_type?: "bora" | "sca_traditional" | "sca_cva" | "coe" | "roastery";
+  joining_open?: boolean;
   active: boolean;
   created_at: string;
   updated_at: string;

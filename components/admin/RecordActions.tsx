@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, buttonSm, buttonXs } from "@/components/ui/button";
-import { deleteCoffee, deleteEvent, deleteSession, moveCoffee, setEventActive, setSessionActive } from "@/lib/actions/admin";
+import { deleteCoffee, deleteEvent, deleteSession, moveCoffee, removeSessionCupper, setEventActive, setSessionActive, setSessionJoining } from "@/lib/actions/admin";
 import type { ActionResult } from "@/lib/validations";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -94,6 +94,77 @@ export function DeleteButton({
       ) : (
         <Button variant="danger" className={buttonSm} onClick={() => setOpen(true)}>
           {label}
+        </Button>
+      )}
+      {message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+    </div>
+  );
+}
+
+export function JoinToggle({ id, open }: { id: string; open: boolean }) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  return (
+    <div className="inline-flex flex-col items-start gap-2">
+      <Button
+        variant={open ? "danger" : "secondary"}
+        className={buttonSm}
+        disabled={pending}
+        onClick={async () => {
+          setPending(true);
+          setMessage(null);
+          const result = await setSessionJoining(id, !open);
+          setPending(false);
+          if (!result.ok) {
+            setMessage(result.message);
+            return;
+          }
+          router.refresh();
+        }}
+      >
+        {pending ? "Saving…" : open ? "Close table" : "Open table"}
+      </Button>
+      {message ? <p className="text-sm text-ink-soft">{message}</p> : null}
+    </div>
+  );
+}
+
+export function RemoveCupperButton({ runId, name }: { runId: string; name: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  return (
+    <div className="inline-flex flex-col items-end gap-2">
+      {open ? (
+        <div className="flex flex-wrap items-center justify-end gap-2 rounded-xl border border-danger/20 bg-danger-bg px-3 py-2">
+          <span className="text-sm text-danger">Remove {name} from this table?</span>
+          <Button
+            variant="primary"
+            className={`${buttonXs} bg-danger hover:bg-danger active:bg-danger`}
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              const result = await removeSessionCupper(runId);
+              setPending(false);
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              router.refresh();
+            }}
+          >
+            {pending ? "Removing…" : "Yes, remove"}
+          </Button>
+          <Button variant="ghost" className={buttonXs} onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <Button variant="danger" className={buttonXs} onClick={() => setOpen(true)}>
+          Remove
         </Button>
       )}
       {message ? <p className="text-sm text-ink-soft">{message}</p> : null}

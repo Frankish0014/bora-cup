@@ -12,10 +12,10 @@ async function loadSession(slug: string) {
   try {
     const session = await getSessionBySlug(slug);
     if (!session) return { status: "missing" as const };
-    if (!session.active) {
+    if (!session.active || session.joining_open === false) {
       const run = await findRunForSlug(slug);
       if (run) return { status: "resume" as const };
-      return { status: "inactive" as const };
+      if (!session.active) return { status: "inactive" as const };
     }
     const coffees = await getCoffeesForSession(session.id, true);
     return { status: "ready" as const, session, coffeeCount: coffees.length };
@@ -62,6 +62,7 @@ export default async function SessionPage({
       coffeeCount={loaded.coffeeCount}
       notice={query.notice}
       emailEnabled={isEmailConfigured()}
+      joiningClosed={loaded.session.joining_open === false}
     />
   );
 }

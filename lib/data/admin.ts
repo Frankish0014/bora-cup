@@ -392,7 +392,12 @@ export async function getSessions() {
   throwIfError(error, "Something went wrong while loading sessions.");
   return (data ?? []).map((session) => {
     const { events, ...rest } = session;
-    return { ...(rest as SessionRecord), eventName: asOne(events as { name: string } | { name: string }[])?.name ?? "—" };
+    const record = rest as SessionRecord;
+    return {
+      ...record,
+      joining_open: record.joining_open !== false,
+      eventName: asOne(events as { name: string } | { name: string }[])?.name ?? "—",
+    };
   });
 }
 
@@ -400,7 +405,66 @@ export async function getSession(id: string) {
   const supabase = getServiceClient();
   const { data, error } = await supabase.from("sessions").select("*").eq("id", id).maybeSingle();
   throwIfError(error, "Something went wrong while loading this session.");
-  return (data as SessionRecord | null) ?? null;
+  if (!data) return null;
+  return { ...(data as SessionRecord), joining_open: data.joining_open !== false };
+}
+
+export type SessionCupper = {
+  runId: string;
+  participantId: string;
+  name: string;
+  email: string;
+  country: string;
+  status: "in_progress" | "completed";
+  startedAt: string;
+  completedAt: string | null;
+  cupsRated: number;
+};
+
+export async function getSessionCuppers(sessionId: string) {
+  const supabase = getServiceClient();
+  const { data: runs, error } = await supabase
+    .from("participant_sessions")
+    .select("id, status, started_at, completed_at, participant_id, participants(id, name, email, country)")
+    .eq("session_id", sessionId)
+    .order("started_at", { ascending: true });
+  throwIfError(error, "Something went wrong while loading this table.");
+  const runIds = (runs ?? []).map((run) => run.id as string);
+  const counts = new Map<string, number>();
+  if (runIds.length > 0) {
+    const { data: evaluations, error: evaluationError } = await supabase
+      .from("evaluations")
+      .select("participant_session_id")
+      .eq("session_id", sessionId)
+      .in("participant_session_id", runIds);
+    throwIfError(evaluationError, "Something went wrong while loading this table.");
+    for (const evaluation of evaluations ?? []) {
+      const runId = evaluation.participant_session_id as string;
+      counts.set(runId, (counts.get(runId) ?? 0) + 1);
+    }
+  }
+  return (runs ?? []).flatMap((run) => {
+    const person = asOne(
+      run.participants as
+        | { id: string; name: string; email: string; country: string }
+        | Array<{ id: string; name: string; email: string; country: string }>
+        | null,
+    );
+    if (!person) return [];
+    return [
+      {
+        runId: run.id as string,
+        participantId: person.id,
+        name: person.name,
+        email: person.email,
+        country: person.country,
+        status: run.status === "completed" ? "completed" : "in_progress",
+        startedAt: run.started_at as string,
+        completedAt: (run.completed_at as string | null) ?? null,
+        cupsRated: counts.get(run.id as string) ?? 0,
+      } satisfies SessionCupper,
+    ];
+  });
 }
 
 export async function getCoffees(sessionId?: string) {

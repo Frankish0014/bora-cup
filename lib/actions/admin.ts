@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { AppError, friendlyError, throwIfError } from "@/lib/errors";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { TABLE_LOCK_SQL_MESSAGE } from "@/lib/session-room";
 import { coffeeSchema, eventSchema, sessionSchema, zodFieldErrors, type ActionResult } from "@/lib/validations";
 
 function revalidateCupping() {
@@ -199,6 +200,57 @@ export async function setSessionActive(id: string, active: boolean): Promise<Act
   } catch (error) {
     return { ok: false, message: friendlyError(error, "Something went wrong while updating the session.") };
   }
+}
+
+export async function setSessionJoining(id: string, joiningOpen: boolean): Promise<ActionResult> {
+  await requireAdmin();
+  try {
+    const supabase = getServiceClient();
+    const { error } = await supabase.from("sessions").update({ joining_open: joiningOpen }).eq("id", id);
+    if (error && /joining_open|schema cache/i.test(error.message)) {
+      throw new AppError(TABLE_LOCK_SQL_MESSAGE);
+    }
+    throwIfError(error, "Something went wrong while updating the table.");
+    const { data: session } = await supabase.from("sessions").select("slug").eq("id", id).maybeSingle();
+    revalidateCupping();
+    if (typeof session?.slug === "string") revalidatePath(`/session/${session.slug}`);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while updating the table.") };
+  }
+}
+
+export async function removeSessionCupper(runId: string): Promise<ActionResult> {
+  await requireAdmin();
+  if (!/^[0-9a-f-]{36}$/i.test(runId)) return { ok: false, message: "That cupper could not be found on this table." };
+  try {
+    const supabase = getServiceClient();
+    const { data: run, error: runError } = await supabase
+      .from("participant_sessions")
+      .select("id, session_id, sessions(slug)")
+      .eq("id", runId)
+      .maybeSingle();
+    throwIfError(runError, "Something went wrong while removing this cupper.");
+    if (!run) return { ok: false, message: "That cupper could not be found on this table." };
+    const { error } = await supabase.from("participant_sessions").delete().eq("id", runId);
+    throwIfError(error, "Something went wrong while removing this cupper.");
+    const slug = asOneSlug(run.sessions);
+    revalidateCupping();
+    revalidatePath("/admin/evaluations");
+    revalidatePath("/admin/participants");
+    if (slug) {
+      revalidatePath(`/session/${slug}`);
+      revalidatePath(`/review/${slug}`, "layout");
+    }
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: friendlyError(error, "Something went wrong while removing this cupper.") };
+  }
+}
+
+function asOneSlug(value: { slug: string } | { slug: string }[] | null | undefined) {
+  if (Array.isArray(value)) return value[0]?.slug;
+  return value?.slug;
 }
 
 export async function deleteSession(id: string): Promise<ActionResult<{ deactivated?: boolean }>> {

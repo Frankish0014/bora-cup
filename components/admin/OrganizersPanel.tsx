@@ -3,6 +3,7 @@
 import { createOrganizer, removeOrganizer, updateOrganizer } from "@/lib/actions/organizers";
 import type { Organizer } from "@/types/domain";
 import { organizerSchema, organizerUpdateSchema } from "@/lib/validations";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Alert, Field, Input } from "@/components/ui/field";
 import { Button, buttonSm } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -130,7 +131,7 @@ export function OrganizersPanel({ organizers, currentUserId }: { organizers: Org
             <Input type="email" autoComplete="off" {...form.register("email")} />
           </Field>
           <Field label="Password" hint="At least 8 characters. Share it with them." error={errors.password?.message}>
-            <Input type="password" autoComplete="new-password" {...form.register("password")} />
+            <PasswordInput autoComplete="new-password" {...form.register("password")} />
           </Field>
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Creating…" : "Create organizer"}
@@ -180,7 +181,7 @@ function EditOrganizerForm({ organizer, onCancel, onSaved }: { organizer: Organi
         <Input type="email" autoComplete="off" {...form.register("email")} />
       </Field>
       <Field label="New password" hint="Leave blank to keep the current password." error={errors.password?.message}>
-        <Input type="password" autoComplete="new-password" {...form.register("password")} />
+        <PasswordInput autoComplete="new-password" {...form.register("password")} />
       </Field>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={form.formState.isSubmitting}>

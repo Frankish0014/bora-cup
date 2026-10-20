@@ -143,6 +143,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The home page lists active sessions. At the event, people should enter through a QR code instead.
 
+On Windows, `npm run dev` uses Node’s system certificate store so the local server can reach Supabase. If sign-in returns you to the login page, stop the old `next dev` process and start it again with `npm run dev`.
+
 Useful routes:
 
 - `/session/fully-washed`

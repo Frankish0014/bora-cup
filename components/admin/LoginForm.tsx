@@ -2,6 +2,7 @@
 
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 import { safeAdminPath } from "@/lib/utils";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Alert, Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -43,7 +44,7 @@ export function LoginForm({ nextPath, configured }: { nextPath?: string; configu
         <Input name="email" type="email" autoComplete="username" required />
       </Field>
       <Field label="Password">
-        <Input name="password" type="password" autoComplete="current-password" required />
+        <PasswordInput name="password" autoComplete="current-password" required />
       </Field>
       <Button type="submit" className="mt-2 w-full min-h-13" disabled={pending || !configured}>
         {pending ? "Signing in…" : "Sign in"}

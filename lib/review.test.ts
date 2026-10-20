@@ -85,3 +85,19 @@ describe("padCup", () => {
     expect(padCup(12)).toBe("12");
   });
 });
+
+describe("lotStation", () => {
+  it("keeps a washing station for the score sheet heading", () => {
+    const review = formSessionReview({
+      eventName: "Best of Rwanda",
+      sessionName: "Fully Washed",
+      category: "Fully washed",
+      slug: "fully-washed",
+      coffees,
+      runs: [],
+      evaluations: [],
+    });
+    expect(review.lots[0].washingStation).toBe("Kibuye");
+    expect(review.lots[1].washingStation).toBeNull();
+  });
+});

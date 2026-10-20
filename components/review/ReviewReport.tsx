@@ -5,7 +5,7 @@ import { buttonClasses, buttonSm } from "@/components/ui/button";
 import { CopyLink } from "@/components/ui/CopyLink";
 import { formatNotes } from "@/lib/cupping";
 import { ratingScale } from "@/lib/ratings";
-import { coffeeReview, padCup, reviewSummary, type ReviewCupper, type ReviewScore, type SessionReview } from "@/lib/review";
+import { coffeeReview, lotStation, padCup, reviewSummary, type ReviewCupper, type ReviewLot, type ReviewScore, type SessionReview } from "@/lib/review";
 import { cn, formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
@@ -125,9 +125,9 @@ function ScoreSheet({ review }: { review: SessionReview }) {
             <tr className="border-b border-line text-left">
               <th className="sticky left-0 bg-foam px-4 py-3 font-medium text-ink-soft">Cupper</th>
               {review.lots.map((lot) => (
-                <th key={lot.id} className="px-3 py-3 font-medium text-ink-soft">
+                <th key={lot.id} className="min-w-[8.5rem] px-3 py-3 font-medium text-ink-soft">
                   <span className="block text-[11px] tabular text-ink-mute">Cup {padCup(lot.cup)}</span>
-                  <span className="mt-0.5 block max-w-[8.5rem] truncate font-medium text-ink">{lot.lotName}</span>
+                  <LotHeading lot={lot} compact />
                 </th>
               ))}
             </tr>
@@ -176,14 +176,15 @@ function ByCoffee({ review }: { review: SessionReview }) {
       </div>
       {review.lots.map((lot) => {
         const group = coffeeReview(review, lot.id);
-        const facts = [lot.process, lot.variety, lot.washingStation, lot.district].filter(Boolean);
+        const facts = [lot.process, lot.variety, lot.district].filter(Boolean);
         return (
           <article key={lot.id} className="card print-break p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-medium tracking-wide text-ink-mute tabular">Cup {padCup(lot.cup)}</p>
                 <h3 className="mt-1 text-xl font-semibold tracking-tight text-ink">{lot.lotName}</h3>
-                {facts.length > 0 ? <p className="mt-1 text-sm text-ink-soft">{facts.join(" · ")}</p> : null}
+                {lotStation(lot) ? <p className="mt-1 text-sm text-ink-soft">{lotStation(lot)}</p> : null}
+                {facts.length > 0 ? <p className="mt-0.5 text-sm text-ink-mute">{facts.join(" · ")}</p> : null}
               </div>
               <div className="text-right">
                 <p className="font-display text-3xl tabular text-ink">{group.averageHundred == null ? "—" : group.averageHundred.toFixed(1)}</p>
@@ -245,6 +246,7 @@ function ByCupper({ review }: { review: SessionReview }) {
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium text-ink-mute tabular">Cup {padCup(lot.cup)}</p>
                     <p className="font-medium text-ink">{lot.lotName}</p>
+                    {lotStation(lot) ? <p className="text-sm text-ink-soft">{lotStation(lot)}</p> : null}
                     <Notes score={score} />
                   </div>
                   <ScoreCell score={score} align="right" />
@@ -255,6 +257,16 @@ function ByCupper({ review }: { review: SessionReview }) {
         </article>
       ))}
     </section>
+  );
+}
+
+function LotHeading({ lot, compact = false }: { lot: ReviewLot; compact?: boolean }) {
+  const station = lotStation(lot);
+  return (
+    <>
+      <span className={cn("mt-0.5 block font-medium leading-snug text-ink", compact && "max-w-[10rem] whitespace-normal")}>{lot.lotName}</span>
+      {station ? <span className={cn("mt-0.5 block font-normal leading-snug text-ink-mute", compact ? "max-w-[10rem] text-[11px]" : "text-sm")}>{station}</span> : null}
+    </>
   );
 }
 

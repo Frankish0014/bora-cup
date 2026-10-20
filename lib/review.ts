@@ -213,3 +213,7 @@ export function coffeeReview(review: SessionReview, lotId: string) {
 export function padCup(cup: number) {
   return String(cup).padStart(2, "0");
 }
+
+export function lotStation(lot: Pick<ReviewLot, "washingStation">) {
+  return lot.washingStation;
+}
